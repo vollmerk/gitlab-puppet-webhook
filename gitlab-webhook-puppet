@@ -72,7 +72,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
     return proc.stdout
 
   """
-    de_POST: Handles incoming post from gitlab webhook, decode json and do something about it
+    do_POST: Handles incoming post from gitlab webhook, decode json and do something about it
               for now we're just going to log it!
   """
   def do_POST(self):
@@ -128,7 +128,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
       """ If it doesn't exist, ch to base and git clone it! """
       os.chdir(Config.get('main','puppet_env_dir'))
       log.info('environment_sync:: %s does not exist, cloning into new directory',environment)
-      output = self.run_cmd('git clone %s %s',git_ssh_url,environment)
+      output = self.run_cmd('git clone %s %s' % (git_ssh_url,environment))
 
 
 """ 
