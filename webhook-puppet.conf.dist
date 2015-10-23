@@ -3,22 +3,13 @@
 ; The TCP port that the server should bind to, defaults to 7010
 http_port=7010
 
-; deploy_key
-; There's an assumption you're using a deploy key to clone and pull the 
-; Git directories in question, the path to the private key must be specified here
-deploy_key=/root/.ssh/git-deploy-key
-
 ; project_name
 ; This is the name of your project, as listed in gitlab
-project_name=cluster-puppet-manifests
+project_name=puppet-manifests
 
 ; protected_environments
 ; A comma delimited list of environments that shouldn't be touched!, no matter what!
 protected_environments=production,outage
-
-; gitlab_ssh
-; The user@host for gitlab
-gitlab_ssh=git@gitlab.com
 
 ; log_file
 ; Define the log file where output from the webhook will be saved, uses Python's 
