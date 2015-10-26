@@ -27,24 +27,6 @@ import json
 import daemon,daemon.pidfile
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
-## Load the Config file ./webhook-puppet.conf
-Config = ConfigParser.ConfigParser()
-Config.read(os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf')
-
-## Init Logging, use values from config we store 7 historical copies by
-## defualt, maybe move that into the config?
-if Config.get('main','log_level') == 'DEBUG':
-  log_level = logging.DEBUG
-elif Config.get('main','log_level') == 'INFO':
-  log_level = logging.INFO
-else:
-  log_level = logging.WARNING
-log = logging.getLogger('log')
-log.setLevel(log_level)
-log_handle = logging.handlers.RotatingFileHandler(Config.get('main','log_file'),maxBytes=Config.get('main','log_max_size'),backupCount=7)
-log_format = logging.Formatter("%(asctime)s %(levelname)s %(message)s","%B %d %H:%M:%S")
-log_handle.setFormatter(log_format)
-log.addHandler(log_handle)
 
 ## Define what our webserver is going to do
 class puppetwebhook(BaseHTTPRequestHandler): 
@@ -136,6 +118,26 @@ class puppetwebhook(BaseHTTPRequestHandler):
  Main:: Run it! 
 """
 def main():
+  ## Load the Config file ./webhook-puppet.conf
+  Config = ConfigParser.ConfigParser()
+  Config.read(os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf')
+
+  ## Init Logging, use values from config we store 7 historical copies by
+  ## defualt, maybe move that into the config?
+  if Config.get('main','log_level') == 'DEBUG':
+    log_level = logging.DEBUG
+  elif Config.get('main','log_level') == 'INFO':
+    log_level = logging.INFO
+  else:
+    log_level = logging.WARNING
+  log = logging.getLogger('log')
+  log.setLevel(log_level)
+  log_handle = logging.handlers.RotatingFileHandler(Config.get('main','log_file'),maxBytes=Config.get('main','log_max_size'),backupCount=7)
+  log_format = logging.Formatter("%(asctime)s %(levelname)s %(message)s","%B %d %H:%M:%S")
+  log_handle.setFormatter(log_format)
+  log.addHandler(log_handle)
+  
+  """ Try to start HTTP server """
   try:
     server = HTTPServer(('',int(Config.get('main','http_port'))),puppetwebhook)
     log.info(':Main:: Starting HTTP Server on port %s',Config.get('main','http_port'))
