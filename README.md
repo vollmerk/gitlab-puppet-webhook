@@ -4,6 +4,7 @@ Gitlab Puppet Webhook
 An open source gitlab hook used to update puppet environments pulled from a
 single repo after receiving a gitlab push notification. This is a stop-gap
 measure before I'm able move to something like r10k
+
 ---
 #### Concept
 This script expects you to have all of your puppet manifests located in a single
