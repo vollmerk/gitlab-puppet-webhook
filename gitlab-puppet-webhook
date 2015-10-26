@@ -60,7 +60,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
   def do_GET(self):
     log.info('do_GET:: Received get, returning friendly error')
     message = 'INVALID Operation - only POST supported'
-    self.send_response(500)
+    self.send_response(200)
     self.send_header('Content-type','text')
     self.send_header('Content-length',str(len(message))
     self.end_headers()
