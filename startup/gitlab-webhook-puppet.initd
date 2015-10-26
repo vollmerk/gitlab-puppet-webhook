@@ -7,24 +7,40 @@
 . /etc/init.d/functions
 
 ## YOU MUST UPDATE THE PATH TO THE SCRIPT
-DAEMONBIN=/opt/bin/gitlab-puppet-webhook
+DAEMONPATH=/opt/bin/
+#### Stop editing ####
+DAEMON=gitlab-puppet-webhook
+LOCKFILE=/var/lock/subsys/gitlab-puppet-webhook
+PIDFILE=${DAEMONPATH}gitlab-puppet-webhook.pid
 
 # Start the Service
 start() {
 	echo -n "Starting Gitlab Puppet Webhook: "
-	`${DAEMONBIN}`
+	`${DAEMON}`
 	## Create a lock file ##
-	touch /var/lock/subsys/gitlab-puppet-webhook
+	touch ${LOCKFILE}
 	success $"Gitlab Puppet Webhook startup"
 	echo
 }
 # Stop the Service
 stop() {
 	echo -n "Stopping Gitlab Puppet Webhook: "
-	killproc gitlab-puppet-webhook
+	killproc -p $PIDFILE $DAEMON
 	## Delete the lock file ##
-	rm -f /var/lock/subsys/gitlab-puppet-webhook
+	rm -f ${LOCKFILE}
 	echo
+}
+status() {
+	if [ -f ${PIDFILE}]; then
+		PID=`cat ${PIDFILE}`
+		if [ -z "`ps axf | grep ${PID} | grep -v grep`" ]; then
+			printf "%s\n" "Process dead but pidfile exists"
+		else
+			echo "Running"
+		fi
+	else
+		printf "%s\n" "Service not running"
+	fi
 }
 
 ### The logic bits ###
@@ -36,7 +52,7 @@ case "$1" in
 		stop
 		;;
 	status)
-		status ${DAEMONBIN}
+		status
 		;;
 	restart|reload|condrestart)
 		stop

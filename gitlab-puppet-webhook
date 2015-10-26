@@ -24,7 +24,7 @@ import os,errno,sys,re,subprocess
 import ConfigParser
 import logging,logging.handlers
 import json
-import daemon
+import daemon,daemon.pidfile
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 ## Load the Config file ./webhook-puppet.conf
@@ -145,6 +145,8 @@ def main():
     server.socket.close()
 
 if __name__ == '__main__':
-  with daemon.DaemonContext():
+  with daemon.DaemonContext(
+    pidfile=daemon.pidfile.PIDLockFile(os.path.dirname(os.path.abspath(__file__)) + '/gitlab-puppet-webhook.pid')
+  ):
     main()
 
