@@ -11,7 +11,7 @@ DAEMONBIN=/opt/bin/gitlab-puppet-webhook
 
 # Start the Service
 start() {
-	initlog -c "echo -n Starting Gitlab Puppet Webhook: "
+	echo -n "Starting Gitlab Puppet Webhook: "
 	`${DAEMONBIN}`
 	## Create a lock file ##
 	touch /var/lock/subsys/gitlab-puppet-webhook
@@ -20,7 +20,7 @@ start() {
 }
 # Stop the Service
 stop() {
-	initlog -c "echo -n Stopping Gitlab Puppet Webhook: "
+	echo -n "Stopping Gitlab Puppet Webhook: "
 	killproc gitlab-puppet-webhook
 	## Delete the lock file ##
 	rm -f /var/lock/subsys/gitlab-puppet-webhook
@@ -36,7 +36,7 @@ case "$1" in
 		stop
 		;;
 	status)
-		status gitlab-puppet-webhook
+		status ${DAEMONBIN}
 		;;
 	restart|reload|condrestart)
 		stop
