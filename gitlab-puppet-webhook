@@ -20,11 +20,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import os,errno,sys,re,subprocess
+import os,subprocess
 import ConfigParser
 import logging,logging.handlers
 import json
 import daemon,daemon.pidfile
+from pwd import getpwnam
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 
@@ -119,10 +120,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
 """
 def main():
   """ Config and log must be global """
-  global log,Config
-  """ Load the Config file ./webhook-puppet.conf """
-  Config = ConfigParser.ConfigParser()
-  Config.read(os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf')
+  global log
 
   """
     Init Logging, use values from config we store 7 historical copies by
@@ -151,9 +149,18 @@ def main():
     server.socket.close()
 
 if __name__ == '__main__':
+  global Config
+  """ Load the Config file ./webhook-puppet.conf """
+  Config = ConfigParser.ConfigParser()
+  Config.read(os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf')
+
   try:
+    daemonuid = getpwnam(Config.get('main','runas')).pw_uid
+    daemongid = getpwnam(Config.get('main','runas')).pw_gid
     with daemon.DaemonContext(
-      pidfile=daemon.pidfile.PIDLockFile(os.path.dirname(os.path.abspath(__file__)) + '/gitlab-puppet-webhook.pid')
+      pidfile=daemon.pidfile.PIDLockFile(os.path.dirname(os.path.abspath(__file__)) + '/gitlab-puppet-webhook.pid'),
+      uid=daemonuid,
+      gid=daemongid
     ):
       main()
   except:

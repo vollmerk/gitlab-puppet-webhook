@@ -30,6 +30,10 @@ log_level=DEBUG
 ; are put in sub-directories below this
 puppet_env_dir=/etc/puppet/environments
 
+; runas
+; The user (name) that the daemon should run as
+runas=webhook
 
-
-
+; damonize
+; if set it should fork off and run as a daemon, disabling this can help with debug
+daemonize=true
