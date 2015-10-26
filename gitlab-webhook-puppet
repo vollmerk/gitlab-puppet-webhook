@@ -24,6 +24,7 @@ import os,errno,sys,re,subprocess
 import ConfigParser
 import logging,logging.handlers
 import json
+import daemon
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 ## Load the Config file ./webhook-puppet.conf
@@ -144,5 +145,6 @@ def main():
     server.socket.close()
 
 if __name__ == '__main__':
-  main()
+  with daemon.DaemonContext():
+    main()
 
