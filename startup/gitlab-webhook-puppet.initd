@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+# chkconfig: 35 90 12
+# description: gitlab-puppet-webhook
+#
+# Load base functions
+. /etc/init.d/functions
+
+## YOU MUST UPDATE THE PATH TO THE SCRIPT
+DAEMONBIN=/opt/bin/gitlab-puppet-webhook
+
+# Start the Service
+start() {
+	initlog -c "echo -n Starting Gitlab Puppet Webhook: "
+	`${DAEMONBIN}`
+	## Create a lock file ##
+	touch /var/lock/subsys/gitlab-puppet-webhook
+	success $"Gitlab Puppet Webhook startup"
+	echo
+}
+# Stop the Service
+stop() {
+	initlog -c "echo -n Stopping Gitlab Puppet Webhook: "
+	killproc gitlab-puppet-webhook
+	## Delete the lock file ##
+	rm -f /var/lock/subsys/gitlab-puppet-webhook
+	echo
+}
+
+### The logic bits ###
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status gitlab-puppet-webhook
+		;;
+	restart|reload|condrestart)
+		stop
+		start
+		;;
+	*)
+		echo $"Usage: $0 {start|stop|restart|status}"
+		exit 1
+esac
+exit 0
