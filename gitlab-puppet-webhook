@@ -55,6 +55,18 @@ class puppetwebhook(BaseHTTPRequestHandler):
     return proc.stdout
 
   """
+    do_GET: Return a friendly error
+  """
+  def do_GET(self):
+    log.info('do_GET:: Received get, returning friendly error')
+    message = 'INVALID Operation - only POST supported'
+    self.send_response(500)
+    self.send_header('Content-type','text')
+    self.send_header('Content-length',str(len(message))
+    self.end_headers()
+    self.wfile.write(message)
+
+  """
     do_POST: Handles incoming post from gitlab webhook, decode json and do something about it
               for now we're just going to log it!
   """
