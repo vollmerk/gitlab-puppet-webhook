@@ -118,12 +118,14 @@ class puppetwebhook(BaseHTTPRequestHandler):
  Main:: Run it! 
 """
 def main():
-  ## Load the Config file ./webhook-puppet.conf
+  """ Load the Config file ./webhook-puppet.conf """
   Config = ConfigParser.ConfigParser()
   Config.read(os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf')
 
-  ## Init Logging, use values from config we store 7 historical copies by
-  ## defualt, maybe move that into the config?
+  """
+    Init Logging, use values from config we store 7 historical copies by
+    default, maybe move that into the config?
+  """
   if Config.get('main','log_level') == 'DEBUG':
     log_level = logging.DEBUG
   elif Config.get('main','log_level') == 'INFO':
@@ -142,13 +144,20 @@ def main():
     server = HTTPServer(('',int(Config.get('main','http_port'))),puppetwebhook)
     log.info(':Main:: Starting HTTP Server on port %s',Config.get('main','http_port'))
     server.serve_forever()
-  except KeyboardInterrupt:
+  except KeyboardInterrupt,SystemExit:
     log.info(':Main:: Ctrl-C Detected, shutting down')
     server.socket.close()
+  except:
+    log.critical(':Main:: Unknown Error, attempting to clean up, this is bad.')
+    server.socket.close()
+    raise
 
 if __name__ == '__main__':
-  with daemon.DaemonContext(
-    pidfile=daemon.pidfile.PIDLockFile(os.path.dirname(os.path.abspath(__file__)) + '/gitlab-puppet-webhook.pid')
-  ):
-    main()
-
+  try:
+    with daemon.DaemonContext(
+      pidfile=daemon.pidfile.PIDLockFile(os.path.dirname(os.path.abspath(__file__)) + '/gitlab-puppet-webhook.pid')
+    ):
+      main()
+  except:
+    print ':Main:: Unknown Error starting daemon!'
+    raise
