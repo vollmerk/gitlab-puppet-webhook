@@ -62,7 +62,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
     message = 'INVALID Operation - only POST supported'
     self.send_response(200)
     self.send_header('Content-type','text')
-    self.send_header('Content-length',str(len(message))
+    self.send_header('Content-length',str(len(message)))
     self.end_headers()
     self.wfile.write(message)
 
