@@ -118,6 +118,8 @@ class puppetwebhook(BaseHTTPRequestHandler):
  Main:: Run it! 
 """
 def main():
+  """ Config and log must be global """
+  global log,Config
   """ Load the Config file ./webhook-puppet.conf """
   Config = ConfigParser.ConfigParser()
   Config.read(os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf')
@@ -147,10 +149,6 @@ def main():
   except KeyboardInterrupt,SystemExit:
     log.info(':Main:: Ctrl-C Detected, shutting down')
     server.socket.close()
-  except:
-    log.critical(':Main:: Unknown Error, attempting to clean up, this is bad.')
-    server.socket.close()
-    raise
 
 if __name__ == '__main__':
   try:
