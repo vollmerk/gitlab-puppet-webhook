@@ -85,11 +85,11 @@ class puppetwebhook(BaseHTTPRequestHandler):
 
       """ Make sure we're not dealing with a protected/prohibited user/env """
       gitlab_project_base = data['repository']['git_http_url'].split('/')[3]
-      log.debug('do_POST:: Detected %s Gitlab Project/User path',gitlab_project_base)
       if gitlab_project_base in Config.get('main','protected_environments'):
         log.info('do_POST:: %s is a protected environment, halting',gitlab_project_base)
       else:
         """ Run the git pull, create directory if required """
+        log.info('do_POST:: %s is not a protected environment, syncing',gitlab_project_base)
         self.environment_sync(gitlab_project_base,data['repository']['git_ssh_url'])
 
       
