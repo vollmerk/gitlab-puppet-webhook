@@ -28,6 +28,12 @@ as a 'deploy' key on all of the repos that it will need to clone.
 
  * python-daemon
 
+
+#### Installing on Centos6
+
+  yum -y install python-pip
+  pip install --upgrade python-daemon
+
 #### Startup Scripts
   Currently only SysVinitD scripts are included, you will need to modify the path to your script
   before the init.d script will work properly
