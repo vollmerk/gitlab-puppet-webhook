@@ -139,6 +139,11 @@ if __name__ == '__main__':
     print ':Main:: IOError opening %s verify permissions' % (os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf')
     sys.exit(1)
 
+  daemonuid = getpwnam(Config.get('main','runas')).pw_uid
+  daemongid = getpwnam(Config.get('main','runas')).pw_gid
+  if daemongid == 0 or daemonuid == 0:
+    print 'Aborting:: service cannot run as ROOT'
+    sys.exit(1)
 
   """ Config and log must be global """
   global log
@@ -165,16 +170,14 @@ if __name__ == '__main__':
     sys.exit(1)
 
   """ python-daemon doesn't gracefully handle the pid lock file not being writeable so check manually """
-  if not os.access(os.path.dirname(os.path.abspath(__file__)) + '/gitlab-puppet-webhook.pid', os.W_OK):
-    print ':Main:: IOError Unable to write lockfile %s please verify permissions' % (os.path.dirname(os.path.abspath(__file__)) + '/gitlab-puppet-webhook.pid')
-    sys.exit(1)
+  dirStat = os.stat(os.path.dirname(os.path.abspath(__file__)))
+  if ((dirStat[stat.ST_UID] != daemonuid and (dirStat[stat.ST_MODE] & stat.S_IWUSR)) or
+    (dirStat[stat.ST_GID] != daemongid and (dirStat[stat.ST_MODE] & stat.S_IWGRP)) or
+    (dirStat[stat.ST_MODE] & stat.S_IWOTH)):
+    print ':Main:: IOError unable to write lockfile %s' % (os.path.dirname(os.path.abspath(__file__)) + '/gitlab-puppet-webhook.pid')
+    sys.exit(10
 
   try:
-    daemonuid = getpwnam(Config.get('main','runas')).pw_uid
-    daemongid = getpwnam(Config.get('main','runas')).pw_gid
-    if daemongid == 0 or daemonuid == 0:
-      print 'Aborting:: service cannot run as ROOT'
-      sys.exit(1)
     log.debug('Starting Daemon as %s (%s:%s)' % (Config.get('main','runas'),daemonuid,daemongid))
     with daemon.DaemonContext(
       pidfile=daemon.pidfile.PIDLockFile(os.path.dirname(os.path.abspath(__file__)) + '/gitlab-puppet-webhook.pid'),
