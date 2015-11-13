@@ -119,6 +119,8 @@ class puppetwebhook(BaseHTTPRequestHandler):
  Main:: Run it! 
 """
 def main():
+  """ Restart the Logger now that we've switched to the new UID """
+  startLogger()
   
   """ Try to start HTTP server """
   try:
@@ -129,25 +131,12 @@ def main():
     log.info(':Main:: Ctrl-C Detected, shutting down')
     server.socket.close()
 
-if __name__ == '__main__':
-  global Config
-  """ Load the Config file ./webhook-puppet.conf """
-  Config = ConfigParser.ConfigParser()
-  try:
-    Config.read(os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf')
-  except IOError:
-    print ':Main:: IOError opening %s verify permissions' % (os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf')
-    sys.exit(1)
-
-  daemonuid = getpwnam(Config.get('main','runas')).pw_uid
-  daemongid = getpwnam(Config.get('main','runas')).pw_gid
-  if daemongid == 0 or daemonuid == 0:
-    print 'Aborting:: service cannot run as ROOT'
-    sys.exit(1)
-
-  """ Config and log must be global """
+"""
+  startLogger
+    Attempt to create and start a logging handle, log is globalized so that we can pass this around
+"""
+def startLogger():
   global log
-
   """
     Init Logging, use values from config we store 7 historical copies by
     default, maybe move that into the config?
@@ -168,6 +157,27 @@ if __name__ == '__main__':
   except IOError:
     print ':Main:: IOError opening %s verify permissions' % (Config.get('main','log_file'))
     sys.exit(1)
+ 
+
+if __name__ == '__main__':
+  global Config
+  """ Load the Config file ./webhook-puppet.conf """
+  Config = ConfigParser.ConfigParser()
+  try:
+    Config.read(os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf')
+  except IOError:
+    print ':Main:: IOError opening %s verify permissions' % (os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf')
+    sys.exit(1)
+
+  daemonuid = getpwnam(Config.get('main','runas')).pw_uid
+  daemongid = getpwnam(Config.get('main','runas')).pw_gid
+  if daemongid == 0 or daemonuid == 0:
+    print 'Aborting:: service cannot run as ROOT'
+    sys.exit(1)
+
+  """ Config and log must be global """
+  startLogger()
+
 
   """ python-daemon doesn't gracefully handle the pid lock file not being writeable so check manually """
   dirStat = os.stat(os.path.dirname(os.path.abspath(__file__)))
@@ -179,12 +189,12 @@ if __name__ == '__main__':
 
   try:
     log.debug('Starting Daemon as %s (%s:%s)' % (Config.get('main','runas'),daemonuid,daemongid))
+    logging.shutdown()
     with daemon.DaemonContext(
       pidfile=daemon.pidfile.PIDLockFile(os.path.dirname(os.path.abspath(__file__)) + '/gitlab-puppet-webhook.pid'),
       uid=daemonuid,
       gid=daemongid
     ):
-      log.debug('Daemon started...')
       main()
   except:
     print ':Main:: Unknown Error starting daemon!'
