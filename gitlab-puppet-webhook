@@ -84,7 +84,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
       log.info('do_POST:: %s detected in JSON, processing',Config.get('main','project_name'))
 
       """ Make sure we're not dealing with a protected/prohibited user/env """
-      gitlab_project_base = data['repository']['git_http_url'].split('/')[3]
+      gitlab_project_base = data['repository']['git_ssh_url'].split(':')[1].split('/')[0]
       if gitlab_project_base in Config.get('main','protected_environments'):
         log.info('do_POST:: %s is a protected environment, halting',gitlab_project_base)
       else:
