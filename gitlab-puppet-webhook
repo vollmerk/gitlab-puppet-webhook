@@ -130,6 +130,10 @@ def main():
   except KeyboardInterrupt,SystemExit:
     log.info(':Main:: Ctrl-C Detected, shutting down')
     server.socket.close()
+  except:
+    log.info(':Main:: HTPT Server start on TCP %s failed unknown error') % (Config.get('main','http_port'))
+    server.socket.close()
+    sys.exit(1)
 
 """
   startLogger
