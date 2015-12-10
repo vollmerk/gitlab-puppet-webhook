@@ -43,7 +43,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
   """
   def run_cmd(self,cmd):
     """ Make sure git looks in the right homedir """
-    os.environ['HOME'] = os.path.expanduser("~")
+    os.environ['HOME'] = os.path.expanduser('~' + Config.get('main','runas'))
     log.debug('run_cmd:: %s' % cmd)
     """ Run the command, and then wait for it to finish """
     proc = subprocess.Popen(cmd.split(),stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
@@ -152,7 +152,7 @@ def main():
     log.info(':Main:: Ctrl-C Detected, shutting down')
     server.socket.close()
   except:
-    log.info(':Main:: HTPT Server start on TCP %s failed unknown error') % (Config.get('main','http_port'))
+    log.info(':Main:: HTTP Server start on TCP %s failed unknown error') % (Config.get('main','http_port'))
     server.socket.close()
     sys.exit(1)
 
