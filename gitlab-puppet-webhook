@@ -139,7 +139,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
 """ 
  Main:: Run it! 
 """
-def main():
+def runLaunch():
   """ Restart the Logger now that we've switched to the new UID """
   startLogger()
   
@@ -152,7 +152,7 @@ def main():
     log.info(':Main:: Ctrl-C Detected, shutting down')
     server.socket.close()
   except:
-    log.info(':Main:: HTTP Server start on TCP %s failed unknown error') % (Config.get('main','http_port'))
+    log.info(':Main:: HTTP servers shutting down')
     server.socket.close()
     sys.exit(1)
 
@@ -162,6 +162,7 @@ def main():
 """
 def startLogger():
   global log
+
   """
     Init Logging, use values from config we store 7 historical copies by
     default, maybe move that into the config?
@@ -174,6 +175,9 @@ def startLogger():
     log_level = logging.WARNING
   try:
     log = logging.getLogger('log')
+    """ If we already have log handlers, don't re-create """
+    if len(log.handlers):
+      return True
     log.setLevel(log_level)
     log_handle = logging.handlers.RotatingFileHandler(Config.get('main','log_file'),maxBytes=Config.get('main','log_max_size'),backupCount=7)
     log_format = logging.Formatter("%(asctime)s %(levelname)s %(message)s","%B %d %H:%M:%S")
@@ -220,7 +224,7 @@ if __name__ == '__main__':
       uid=daemonuid,
       gid=daemongid
     ):
-      main()
+      runLaunch()
   except:
     print ':Main:: Unknown Error starting daemon!'
     raise
