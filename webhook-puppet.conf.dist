@@ -9,7 +9,17 @@ project_name=puppet-manifests
 
 ; protected_environments
 ; A comma delimited list of environments that shouldn't be touched!, no matter what!
-protected_environments=production,outage
+protected_environments=outage
+
+; environment_method
+; Method used to determine environment name, possible values are repo and branch. 
+; repo - Environment is defined by the root name of the repo, users are expected to fork from parent repo
+; branch - Environment is defined by the branch name of the master repo
+envrionment_method=repo
+
+; production_environment
+; The name of your production environment, this will be checked out as 'production'
+production_envrionment=master
 
 ; log_file
 ; Define the log file where output from the webhook will be saved, uses Python's 

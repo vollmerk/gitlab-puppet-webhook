@@ -83,16 +83,31 @@ class puppetwebhook(BaseHTTPRequestHandler):
     if data['repository']['name'] == Config.get('main','project_name'):
       log.info('do_POST:: %s detected in JSON, processing',Config.get('main','project_name'))
 
-      """ Make sure we're not dealing with a protected/prohibited user/env """
-      gitlab_project_base = data['repository']['git_ssh_url'].split(':')[1].split('/')[0]
-      if gitlab_project_base in Config.get('main','protected_environments'):
-        log.info('do_POST:: %s is a protected environment, halting',gitlab_project_base)
-      else:
-        """ Run the git pull, create directory if required """
-        log.info('do_POST:: %s is not a protected environment, syncing',gitlab_project_base)
-        self.environment_sync(gitlab_project_base,data['repository']['git_ssh_url'])
+      repoBranch = data['ref'].split('/')[2]
 
-      
+      """ Check the environment_method config option """
+      if Config.get('main','environment_method') == 'repo':
+        """ Make sure we're not dealing with a protected/prohibited user/env """
+        repoBase = data['repository']['git_ssh_url'].split(':')[1].split('/')[0]
+      elif Config.get('main','environment_method') == 'branch':
+        repoBase = data['ref'].split('/')[2]
+      else:
+        log.info('do_POST:: Invalid envrionment_method in config file, doing nothing')
+        return False
+
+      """ Check to see if we're dealing with the production branch, defaults to master """
+      if repoBranch == Config.get('main','production_environment'):
+        repoBase = 'production'
+      else:
+        repoBase = repoBranch
+
+      if repoBase in Config.get('main','protected_environments'):
+        log.info('do_POST:: %s is a protected environment, halting',repoBase)
+      else:
+        """ Run the git pull, create dir if needed """
+        log.info('do_POST:: %s is not a protected environment, syncing',repoBase)
+        self.environment_sync(repoBase,data['repository']['git_ssh_url'],repoBranch)
+
     else:
       log.debug('do_POST:: %s not in JSON, ignoring',Config.get('main','project_name'))
 
@@ -100,19 +115,20 @@ class puppetwebhook(BaseHTTPRequestHandler):
     environment_sync:: takes a project base and a SSH repo url, create directory and
      clone git repo if it doesn't exist, if it exists then just do a git pull
   """
-  def environment_sync(self,environment,git_ssh_url):
+  def environment_sync(self,environment,git_ssh_url,gitBranch):
 
     """ Check for path existance """
     if os.path.exists(os.path.join(Config.get('main','puppet_env_dir'),environment)):
       log.debug('environment_sync:: %s exists, doing git pull',os.path.join(Config.get('main','puppet_env_dir'),environment))
       """ Switch to the directory, so git pull acts like you'd expect - git bugs prevent out of path pulls """
       os.chdir(os.path.join(Config.get('main','puppet_env_dir'),environment))
-      output = self.run_cmd('git pull')
+      pullCmd = 'git pull -b %s' % (gitBranch)
+      output = self.run_cmd(pullCmd)
     else:
       """ If it doesn't exist, ch to base and git clone it! """
       os.chdir(Config.get('main','puppet_env_dir'))
       log.info('environment_sync:: %s does not exist, cloning into new directory',environment)
-      output = self.run_cmd('git clone %s %s' % (git_ssh_url,environment))
+      output = self.run_cmd('git clone -b %s %s %s' % (gitBranch,git_ssh_url,environment))
 
 
 """ 
