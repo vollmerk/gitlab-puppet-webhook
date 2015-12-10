@@ -122,7 +122,8 @@ class puppetwebhook(BaseHTTPRequestHandler):
       log.debug('environment_sync:: %s exists, doing git pull',os.path.join(Config.get('main','puppet_env_dir'),environment))
       """ Switch to the directory, so git pull acts like you'd expect - git bugs prevent out of path pulls """
       os.chdir(os.path.join(Config.get('main','puppet_env_dir'),environment))
-      checkoutCmd = 'git checkout -b %s' % (gitBranch)
+      """ We assume it's already been fetched locally """
+      checkoutCmd = 'git checkout %s' % (gitBranch)
       output = self.run_cmd(checkoutCmd)
       pullCmd = 'git pull'
       output = self.run_cmd(pullCmd)
