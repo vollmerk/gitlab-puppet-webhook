@@ -42,6 +42,8 @@ class puppetwebhook(BaseHTTPRequestHandler):
     run_cmd: Runs a CLI command as a sub-proccess does our GIT commands
   """
   def run_cmd(self,cmd):
+    """ Make sure git looks in the right homedir """
+    os.environ['HOME'] = os.path.expanduser("~")
     log.debug('run_cmd:: %s' % cmd)
     """ Run the command, and then wait for it to finish """
     proc = subprocess.Popen(cmd.split(),stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
