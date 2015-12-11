@@ -85,7 +85,11 @@ class puppetwebhook(BaseHTTPRequestHandler):
     if data['repository']['name'] == Config.get('main','project_name'):
       log.info('do_POST:: %s detected in JSON, processing',Config.get('main','project_name'))
 
-      repoBranch = data['ref'].split('/')[2]
+      try: 
+        repoBranch = data['ref'].split('/')[2]
+      except:
+        log.info('do_POST:: Unable to determine branch aborting post')
+        return False
 
       """ Check the environment_method config option """
       if Config.get('main','environment_method') == 'repo':
