@@ -100,6 +100,8 @@ class puppetwebhook(BaseHTTPRequestHandler):
       """ Check to see if we're dealing with the production branch, defaults to master """
       if repoBranch == Config.get('main','production_environment') and Config.get('main','environment_method') == 'branch':
         repoBase = 'production'
+      elif Config.get('main','environment_method') == 'repo':
+        """ Do nothing """
       else:
         repoBase = repoBranch
 
