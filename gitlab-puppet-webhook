@@ -97,6 +97,8 @@ class puppetwebhook(BaseHTTPRequestHandler):
         log.info('do_POST:: Invalid envrionment_method in config file, doing nothing')
         return False
 
+      log.debug('do_POST:: Branch [%s] being cloned into %s' % (repoBranch,repoBase))
+
       """ Check to see if we're dealing with the production branch, defaults to master """
       if repoBranch == Config.get('main','production_environment') and Config.get('main','environment_method') == 'branch':
         repoBase = 'production'
