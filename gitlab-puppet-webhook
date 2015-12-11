@@ -83,7 +83,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
 
     """ Look for our defined puppet project in the json """
     if data['repository']['name'] == Config.get('main','project_name'):
-      log.info('do_POST:: %s detected in JSON, processing',Config.get('main','project_name'))
+      log.info('do_POST:: %s detected in JSON starting processing',Config.get('main','project_name'))
 
       try: 
         repoBranch = data['ref'].split('/')[2]
@@ -151,6 +151,14 @@ def runLaunch():
   """ Restart the Logger now that we've switched to the new UID """
   startLogger()
   
+  stdout_logger = logging.getLogger('STDOUT')
+  sl = StreamToLogger(stdout_logger, logging.INFO)
+  sys.stdout = sl
+ 
+  stderr_logger = logging.getLogger('STDERR')
+  sl = StreamToLogger(stderr_logger, logging.ERROR)
+  sys.stderr = sl
+  
   """ Try to start HTTP server """
   try:
     server = HTTPServer(('',int(Config.get('main','http_port'))),puppetwebhook)
@@ -195,6 +203,18 @@ def startLogger():
     print ':Main:: IOError opening %s verify permissions' % (Config.get('main','log_file'))
     sys.exit(1)
  
+class StreamToLogger(object):
+   """
+   Fake file-like stream object that redirects writes to a logger instance.
+   """
+   def __init__(self, logger, log_level=logging.INFO):
+      self.logger = logger
+      self.log_level = log_level
+      self.linebuf = ''
+ 
+   def write(self, buf):
+      for line in buf.rstrip().splitlines():
+         self.logger.log(self.log_level, line.rstrip())
 
 if __name__ == '__main__':
   global Config
