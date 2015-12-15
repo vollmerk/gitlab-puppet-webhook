@@ -25,6 +25,7 @@ import ConfigParser
 import logging,logging.handlers
 import json
 import daemon,daemon.pidfile
+import ssl
 from pwd import getpwnam
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
@@ -157,11 +158,16 @@ def runLaunch():
   """ Restart the Logger now that we've switched to the new UID """
   startLogger()
   
+  server = HTTPServer(('',int(Config.get('main','http_port'))),puppetwebhook)
   """ Try to start HTTP server """
   try:
-    server = HTTPServer(('',int(Config.get('main','http_port'))),puppetwebhook)
-    log.info(':Main:: Starting HTTP Server on port %s',Config.get('main','http_port'))
+    server.socket = ssl.wrap_socket(server.socket,certfile=Config.get('main','ssl_certfile'),server_side=True)
+  except: 
+    log.info(':Main:: Error creating SSL socket')
+
+  try:
     server.serve_forever()
+    log.info(':Main:: Starting HTTP Server on port %s',Config.get('main','http_port'))
   except KeyboardInterrupt,SystemExit:
     log.info(':Main:: Ctrl-C Detected, shutting down')
     server.socket.close()

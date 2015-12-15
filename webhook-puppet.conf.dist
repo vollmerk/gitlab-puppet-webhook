@@ -44,6 +44,10 @@ puppet_env_dir=/etc/puppet/environments
 ; The user (name) that the daemon should run as
 runas=webhook
 
+; ssl_certfile
+; A pem file with your server.crt + server.key file idenfies this server
+ssl_certfile=/path/to/pemfile
+
 ; damonize
 ; if set it should fork off and run as a daemon, disabling this can help with debug
 daemonize=true
