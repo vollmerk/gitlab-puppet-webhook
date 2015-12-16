@@ -1,0 +1,6 @@
+# vim: set softtabstop=2 ts=2 sw=2 expandtab: 
+
+$basedir      = '/opt/gitlab-puppet-webhook'
+$runasUser    = 'webhook'
+$httpport     = '7010'
+$projectname  = 'puppet'
