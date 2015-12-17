@@ -1,16 +1,16 @@
 [main]
 ; http_port
 ; The TCP port that the server should bind to, defaults to 7010
-http_port=<%= httpport %>
+http_port=<%= @httpport %>
 
 ; deploy_key
 ; There's an assumption you're using a deploy key to clone and pull the 
 ; Git directories in question, the path to the private key must be specified here
-deploy_key=<%= basedir %>/git-deploy-key
+deploy_key=<%= @basedir %>/git-deploy-key
 
 ; project_name
 ; This is the name of your project, as listed in gitlab
-project_name=<%= projectname %>
+project_name=<%= @projectname %>
 
 ; protected_environments
 ; A comma delimited list of environments that shouldn't be touched!, no matter what!
@@ -35,6 +35,6 @@ log_level=DEBUG
 ; are put in sub-directories below this
 puppet_env_dir=/etc/puppet/environments
 
-ssl_certfile=<%= basedir %>/server.pem
+ssl_certfile=<%= @basedir %>/server.pem
 
-runas=<%= runasUser %>
+runas=<%= @runasUser %>

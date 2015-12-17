@@ -1,9 +1,9 @@
 # vim: set softtabstop=2 ts=2 sw=2 expandtab: 
 
-import settings.pp
+import 'settings.pp'
 
 Exec {
-  path  => '/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/sbin/:/bin:/sbin'
+  path  => '/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/sbin/:/bin:/sbin',
 }
 
 file { "${basedir}/webhook-puppet.conf":
@@ -25,7 +25,7 @@ file { '/root/openssl.cnf':
 }
 
 exec { 'gen-deploy-key':
-  command => 'ssh-keygen -t rsa -q -N '' -f ${basedir}/git-deploy-key':
+  command => "ssh-keygen -t rsa -q -N '' -f ${basedir}/git-deploy-key",
   creates => "${basedir}/git-deploy-key",
 }
 
