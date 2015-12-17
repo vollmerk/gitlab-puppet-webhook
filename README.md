@@ -29,11 +29,13 @@ EXAMPLE - Repo: vollmerk/puppet Branch: Incident-4231
 
 The script will do the following
 
-`if /etc/puppet/environments/vollmerk exists then`
-`git checkout Incident-4231`
-`git pull`
-`else`
-`git clone -b Incident-4231 [SSH] /etc/puppet/environments/vollmerk`
+`
+if /etc/puppet/environments/vollmerk exists then
+ git checkout Incident-4231`
+ git pull
+else
+ git clone -b Incident-4231 [SSH] /etc/puppet/environments/vollmerk
+`
 
 ---
 #### Branch mode
