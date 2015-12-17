@@ -29,13 +29,13 @@ EXAMPLE - Repo: vollmerk/puppet Branch: Incident-4231
 
 The script will do the following
 
-`
+```
 if /etc/puppet/environments/vollmerk exists then
- git checkout Incident-4231`
- git pull
+  git checkout Incident-4231`
+  git pull
 else
- git clone -b Incident-4231 [SSH] /etc/puppet/environments/vollmerk
-`
+  git clone -b Incident-4231 [SSH] /etc/puppet/environments/vollmerk
+```
 
 ---
 #### Branch mode
@@ -48,11 +48,14 @@ a `production` environment.
 EXAMPLE - Repo: sysadmin/puppet Branch: Incident4231
 
 The script will do the following
-`if /etc/puppet/environments/Incident4231 exists then`
-`git checkout Incident4231`
-`git pull`
-`else`
-`git clone -b Incident4231 [SSH] /etc/puppet/environments/Incident4231`
+
+```
+if /etc/puppet/environments/Incident4231 exists then
+  git checkout Incident4231
+  git pull
+else
+  git clone -b Incident4231 [SSH] /etc/puppet/environments/Incident4231
+```
 
 ---
 #### gitlab-puppet-webhook
