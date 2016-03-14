@@ -26,6 +26,7 @@ import logging,logging.handlers
 import json
 import daemon,daemon.pidfile
 import ssl
+import smtplib
 from pwd import getpwnam
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
@@ -38,6 +39,16 @@ class puppetwebhook(BaseHTTPRequestHandler):
   """
   def log_message(self,formate,*args):
     return
+
+  def sendEmail(self,sender,receivers,message):
+    try:
+      smtpObj = smtplib.SMTP(Config.get('main','smtpserver'))
+      smtpObj.sendmail(sender,receivers,message)
+      log.info('sendEmail:: Send E-mail to %s from %s' % (receivers,sender))
+    except SMTPException:
+      log.critical('sendEmail:: Failed to send e-mail via %s to %s from %s' % (Config.get('main','smtpserver'),receivers,sender))
+      return False
+    return True
 
   """
     run_cmd: Runs a CLI command as a sub-proccess does our GIT commands
@@ -53,6 +64,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
     if proc.returncode != 0:
       log.critical('run_cmd:: Non-zero exit code:%s executing: %s' % (proc.returncode,cmd))
       log.critical('run_cmd:: %s',proc.stdout.read())
+      return False
     else:
       log.info('run_cmd:: %s executed sucessfully',cmd)
       log.debug('run_cmd:: %s',proc.stdout.read())
@@ -85,6 +97,9 @@ class puppetwebhook(BaseHTTPRequestHandler):
     """ Look for our defined puppet project in the json """
     if data['repository']['name'] == Config.get('main','project_name'):
       log.info('do_POST:: %s detected in JSON starting processing',Config.get('main','project_name'))
+
+      """ Fire this off to Footprints if we can find a ticket in there """
+      """ Disabled for now sendToFootprints(data) """
 
       try: 
         repoBranch = data['ref'].split('/')[2]
@@ -128,6 +143,13 @@ class puppetwebhook(BaseHTTPRequestHandler):
     else:
       log.debug('do_POST:: %s not in JSON, ignoring',Config.get('main','project_name'))
 
+  def sentToFootprints(self,jsonData):
+    """ Look for our keywords in the commit message, if they exist then send an e-mail to footprints """
+    for commit in jsonData['commits']:
+      log.debug('sendToFootprints:: %s',commit)
+    
+    return True
+
   """
     environment_sync:: takes a project base and a SSH repo url, create directory and
      clone git repo if it doesn't exist, if it exists then just do a git pull
@@ -142,6 +164,9 @@ class puppetwebhook(BaseHTTPRequestHandler):
       """ We assume it's already been fetched locally """
       checkoutCmd = 'git checkout %s' % (gitBranch)
       output = self.run_cmd(checkoutCmd)
+      if output == False:
+        # git checkout failed, try to clone again
+        self.run_cmd('git clone -b %s %s %s' % (gitBranch,git_ssh_url,environment))
       pullCmd = 'git pull'
       output = self.run_cmd(pullCmd)
     else:
