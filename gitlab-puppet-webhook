@@ -153,14 +153,14 @@ class puppetwebhook(BaseHTTPRequestHandler):
     """ Do reg-exp to try to find the #[foo] in commit message """
     for commit in data['commits']:
       log.debug('sendTicketSystem:: found a commit checking for #\d+')
-      for ticketnumber in re.findall('#(\d+)',commit):
+      for ticketnumber in re.findall('#(\d+)',commit['message']):
         log.debug('sendTicketSystem:: found %s ticket number in commit proccessing',ticketnumber)
         commands = ''
         """ Check for FIX right before #"""
-        if re.match('FIX #\d+',commit):
+        if re.match('.*FIX #' +ticketnumber + '.*',commit['message']):
           log.debug('sendTicketSystem:: found FIX #\d+ in commit triggering close')
           commands = 'Status=' + Config.get('footprints','closed_status') + "\n"
-        body = commands + commit
+        body = commands + commit['message'] + "\nDetails@:" + commit['url']
         subject = 'GITLAB-Push Update ISSUE=' + ticketnumber + ' PROJ=' + Config.get('footprints','project')
         message = "Subject: %s\n%s" % (subject,body)
         self.sendEmail(Config.get('email','from'),Config.get('footprints','to'),message)
