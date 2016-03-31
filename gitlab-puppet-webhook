@@ -42,7 +42,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
 
   def sendEmail(self,sender,receivers,message):
     try:
-      smtpObj = smtplib.SMTP(Config.get('main','smtpserver'))
+      smtpObj = smtplib.SMTP(Config.get('email','smtpserver'))
       smtpObj.sendmail(sender,receivers,message)
       log.info('sendEmail:: Send E-mail to %s from %s Body: %s' % (receivers,sender,message))
     except SMTPException:
