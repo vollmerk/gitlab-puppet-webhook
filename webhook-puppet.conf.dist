@@ -51,3 +51,27 @@ ssl_certfile=/path/to/pemfile
 ; damonize
 ; if set it should fork off and run as a daemon, disabling this can help with debug
 daemonize=true
+
+[email]
+
+; method
+; production - Only send e-mails when production environments are push'd
+; development - Only send e-mails when non-production environments are push'd
+method=development
+
+; from
+; From address
+from=gitlab@localhost
+
+[footprints]
+
+; project
+; Workspace ID for footprints project
+project=00
+
+; to address for footprints
+to=root@footprints
+
+; close_status
+; Exact string that Status= should be set to when your commit message has "FIX #[TICKET ID]" 
+close_status=Closed

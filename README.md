@@ -58,6 +58,22 @@ else
 ```
 
 ---
+#### E-mail to Ticket system support
+  The webhook can cause specially formatted e-mails to be sent to the configured location
+  currently Footprints is the only ticketing system supported, but I hope to add OTRS soon
+  
+  Relevent configuration options are as follows
+
+  [email] method - Determines when e-mail's are sent to the ticket system
+  [email] from - the FROM: address for e-mails
+
+  Footprints related configuration options
+
+  [footprints] project - Workspace # in footprints
+  [footprints] to - the TO: address for e-mails
+  [footprints] closed_status - Status that tickets should be set to if "FIX #[TICKETID]" is found in commit message
+
+---
 #### gitlab-puppet-webhook
   Starts up a proper linux Daemon that is listening on TCP 7010 for incoming
   Gitlab JSON. Can be started and stopped with the included startup scripts

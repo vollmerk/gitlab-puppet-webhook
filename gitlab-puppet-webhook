@@ -20,7 +20,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import os,subprocess,sys,stat
+import os,subprocess,sys,stat,re
 import ConfigParser
 import logging,logging.handlers
 import json
@@ -44,7 +44,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
     try:
       smtpObj = smtplib.SMTP(Config.get('main','smtpserver'))
       smtpObj.sendmail(sender,receivers,message)
-      log.info('sendEmail:: Send E-mail to %s from %s' % (receivers,sender))
+      log.info('sendEmail:: Send E-mail to %s from %s Body: %s' % (receivers,sender,message))
     except SMTPException:
       log.critical('sendEmail:: Failed to send e-mail via %s to %s from %s' % (Config.get('main','smtpserver'),receivers,sender))
       return False
@@ -98,9 +98,6 @@ class puppetwebhook(BaseHTTPRequestHandler):
     if data['repository']['name'] == Config.get('main','project_name'):
       log.info('do_POST:: %s detected in JSON starting processing',Config.get('main','project_name'))
 
-      """ Fire this off to Footprints if we can find a ticket in there """
-      """ Disabled for now sendToFootprints(data) """
-
       try: 
         repoBranch = data['ref'].split('/')[2]
       except:
@@ -138,23 +135,40 @@ class puppetwebhook(BaseHTTPRequestHandler):
       else:
         """ Run the git pull, create dir if needed """
         log.info('do_POST:: %s is not a protected environment, syncing',repoBase)
-        self.environment_sync(repoBase,data['repository']['git_ssh_url'],repoBranch)
+        self.environmentSync(repoBase,data['repository']['git_ssh_url'],repoBranch)
+        self.sendTicketSystem(data,repoBranch,repoBase)
 
     else:
       log.debug('do_POST:: %s not in JSON, ignoring',Config.get('main','project_name'))
 
-  def sentToFootprints(self,jsonData):
-    """ Look for our keywords in the commit message, if they exist then send an e-mail to footprints """
-    for commit in jsonData['commits']:
-      log.debug('sendToFootprints:: %s',commit)
-    
+  def sendTicketSystem(self,data,repoBranch,repoBase):
+    """ Send e-mail based on method, and configured ticket system modules """
+    if Config.get('email','method') == 'production' and repoBase =! 'production':
+      log.debug('sendTicketSystem:: %s not production not e-mailing to ticket system(s)',repoBase)
+      return False
+    elif Config.get('email','method') == 'development' and repoBase == 'production':
+      log.debug('sendTicketSystem:: %s is production, method is development not e-mailing',repoBase)
+      return False
+
+    """ Do reg-exp to try to find the #[foo] in commit message """
+    for commit in data['commits']:
+      for ticketnumber in re.findall('#(\d+)',commit):
+        commands = ''
+        """ Check for FIX right before #"""
+        if re.match('FIX #\d+',commit):
+          commands = 'Status=' + Config.get('footprints','closed_status') + "\n"
+        body = commands + commit
+        subject = 'GITLAB-Push Update ISSUE=' + ticketnumber + ' PROJ=' + Config.get('footprints','project')
+        message = "Subject: %s\n%s" % (subject,body)
+        self.sendEmail(Config.get('email','from'),Config.get('footprints','to'),message)
+
     return True
 
   """
-    environment_sync:: takes a project base and a SSH repo url, create directory and
+    environmentSync:: takes a project base and a SSH repo url, create directory and
      clone git repo if it doesn't exist, if it exists then just do a git pull
   """
-  def environment_sync(self,environment,git_ssh_url,gitBranch):
+  def environmentSync(self,environment,git_ssh_url,gitBranch):
 
     """ Check for path existance """
     if os.path.exists(os.path.join(Config.get('main','puppet_env_dir'),environment)):
