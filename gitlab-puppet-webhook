@@ -165,7 +165,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
         if re.match('.*FIX #' +ticketnumber + '.*',commit['message']):
           log.debug('sendTicketSystem:: found FIX #\d+ in commit triggering close')
           commands = 'Status=' + Config.get('footprints','closed_status') + "\n"
-        body = commands + commit['message'] + "\nDetails@:" + commit['url']
+        body = commands + commit['message'] + "\n" + commit['url']
         subject = 'GITLAB-Push Update ISSUE=' + ticketnumber + ' PROJ=' + Config.get('footprints','project')
         message = "From: %s\nSubject: %s\n%s" % (sender,subject,body)
         log.info('sendTicketSystem:: Sending E-mail to %s with subject %s'% (Config.get('footprints','to'),subject))
