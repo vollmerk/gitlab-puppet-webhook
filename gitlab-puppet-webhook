@@ -144,24 +144,27 @@ class puppetwebhook(BaseHTTPRequestHandler):
   def sendTicketSystem(self,data,repoBranch,repoBase):
     """ Send e-mail based on method, and configured ticket system modules """
     if Config.get('email','method') == 'production' and repoBase != 'production':
-      log.debug('sendTicketSystem:: %s not production not e-mailing to ticket system(s)',repoBase)
+      log.debug('sendTicketSystem:: repoBase not production not e-mailing to ticket system(s)')
       return False
     elif Config.get('email','method') == 'development' and repoBase == 'production':
-      log.debug('sendTicketSystem:: %s is production, method is development not e-mailing',repoBase)
+      log.debug('sendTicketSystem:: repoBase is production, method is development not e-mailing')
       return False
 
     """ Do reg-exp to try to find the #[foo] in commit message """
     for commit in data['commits']:
+      log.debug('sendTicketSystem:: found a commit checking for #\d+')
       for ticketnumber in re.findall('#(\d+)',commit):
+        log.debug('sendTicketSystem:: found %s ticket number in commit proccessing',ticketnumber)
         commands = ''
         """ Check for FIX right before #"""
         if re.match('FIX #\d+',commit):
+          log.debug('sendTicketSystem:: found FIX #\d+ in commit triggering close')
           commands = 'Status=' + Config.get('footprints','closed_status') + "\n"
         body = commands + commit
         subject = 'GITLAB-Push Update ISSUE=' + ticketnumber + ' PROJ=' + Config.get('footprints','project')
         message = "Subject: %s\n%s" % (subject,body)
         self.sendEmail(Config.get('email','from'),Config.get('footprints','to'),message)
-
+      
     return True
 
   """
