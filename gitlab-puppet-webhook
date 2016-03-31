@@ -163,6 +163,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
         body = commands + commit['message'] + "\nDetails@:" + commit['url']
         subject = 'GITLAB-Push Update ISSUE=' + ticketnumber + ' PROJ=' + Config.get('footprints','project')
         message = "Subject: %s\n%s" % (subject,body)
+        log.info('sendTicketSystem:: Sending E-mail to %s with subject %s'% (Config.get('footprints','to'),subject))
         self.sendEmail(Config.get('email','from'),Config.get('footprints','to'),message)
       
     return True
