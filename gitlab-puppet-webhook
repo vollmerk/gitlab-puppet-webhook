@@ -165,7 +165,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
         if re.match('.*FIX[ED]* #' +ticketnumber + '.*',commit['message']):
           log.debug('sendTicketSystem:: found FIX #\d+ in commit triggering close')
           commands = 'Status=' + Config.get('footprints','close_status') + "\n"
-        time = re.match('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',commit['message']):
+        time = re.match('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',commit['message'])
         if time:
           log.debug('sendticketSystem:: found Time string as %s', time.group(1))
           commands = commands + time.group(1) + "\n"
