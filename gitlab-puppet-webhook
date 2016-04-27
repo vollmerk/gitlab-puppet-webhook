@@ -161,20 +161,53 @@ class puppetwebhook(BaseHTTPRequestHandler):
           sender = '"'+commit['author']['name']+'" <' +commit['author']['email'] + '>'
         except:
           sender = Config.get('email','from')
-        """ Check for FIX right before #"""
-        if re.match('.*FIX[ED]* #' +ticketnumber + '.*',commit['message']):
-          log.debug('sendTicketSystem:: found FIX #\d+ in commit triggering close')
-          commands = 'Status=' + Config.get('footprints','close_status') + "\n"
-        time = re.match('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',commit['message'])
-        if time:
-          log.debug('sendticketSystem:: found Time string as %s', time.group(1))
-          commands = commands + time.group(1) + "\n"
-        body = commands + commit['message'] + "\n" + commit['url']
-        subject = 'GITLAB-Push Update ISSUE=' + ticketnumber + ' PROJ=' + Config.get('footprints','project')
-        message = "From: %s\nSubject: %s\n%s" % (sender,subject,body)
-        log.info('sendTicketSystem:: Sending E-mail to %s with subject %s'% (Config.get('footprints','to'),subject))
-        self.sendEmail(sender,Config.get('footprints','to'),message)
-      
+        if Config.get('footprints','enabled').lower() != 'false':
+          """ Footprints isn't disabled, send out an e-mail """
+          footprintsEmail(sender,ticketnumber,commit)
+        if Config.get('otrs','enabled').lower() != 'false':
+          """ OTRS isn't disabled, send out an e-mail """
+          otrsEmail(sender,ticketnumber,commit)
+     
+    return True
+
+
+  """ 
+   otrsEmail:: If otrs is enabled in teh config then attempt to send an 
+   agent internal-note update to the ticket in question
+  """
+  def otrsEmail(self,sender,ticketnumber,commit):
+    headers = "X-OTRS-FollowUp-SenderType: agent\nX-OTRS-FollowUp-ArticleType: note-internal\n"
+    if re.match('.*FIX[ED]* #' +ticketnumber+ '.*',commit['message']):
+      log.debug('otrsEmail:: found FIX #\d+ in commit triggering close')
+      headers = headers + "X-OTRS-FollowUp-State: closed successful\n" 
+    body = commit['message'] + "\n" + commit['url']
+    subject = 'GITLAB-Push Update [Ticket#' + ticketnumber + ']'
+    message = headers + "From: %s\nSubject: %s\n%s" % (sender,subject,body)
+    log.info('otrsEmail:: Sending E-mail to %s with subject %s' % (Config.get('otrs','to'),subject))
+    self.sendEmail(sender,Config.get('otrs','to'),message)
+
+    return True
+
+  """
+   footprintsEmail:: If footprints is enabled in the config then attempt to send
+   and update e-mail to footprints based on the ticket info
+  """
+  def footprintsEmail(self,sender,ticketnumber,commit):
+
+    """ Check for FIX right before #"""
+    if re.match('.*FIX[ED]* #' +ticketnumber + '.*',commit['message']):
+      log.debug('footprintsEmail:: found FIX #\d+ in commit triggering close')
+      commands = 'Status=' + Config.get('footprints','close_status') + "\n"
+    time = re.match('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',commit['message'])
+    if time:
+      log.debug('sendticketSystem:: found Time string as %s', time.group(1))
+      commands = commands + time.group(1) + "\n"
+    body = commands + commit['message'] + "\n" + commit['url']
+    subject = 'GITLAB-Push Update ISSUE=' + ticketnumber + ' PROJ=' + Config.get('footprints','project')
+    message = "From: %s\nSubject: %s\n%s" % (sender,subject,body)
+    log.info('footprintsEmail:: Sending E-mail to %s with subject %s'% (Config.get('footprints','to'),subject))
+    self.sendEmail(sender,Config.get('footprints','to'),message)
+
     return True
 
   """

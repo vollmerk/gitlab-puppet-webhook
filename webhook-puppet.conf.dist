@@ -67,10 +67,26 @@ from=gitlab@localhost
 ; hostname of your smtp server
 smtpserver=localhost
 
+[otrs]
+
+; enabled
+; this must be set to true for the otrs e-mails to be send
+; Values: true/false
+enabled=false
+
+; to address for otrs that allows OTRS headers
+to=unfiltered@otrs
+
 [footprints]
+
+; enabled
+; this must be set to true for the footprints e-mails to be sent
+; Values: true/false
+enabled=false
 
 ; project
 ; Workspace ID for footprints project
+; Values: Integer representing Footprints Project
 project=00
 
 ; to address for footprints
