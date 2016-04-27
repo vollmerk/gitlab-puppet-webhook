@@ -163,10 +163,10 @@ class puppetwebhook(BaseHTTPRequestHandler):
           sender = Config.get('email','from')
         if Config.get('footprints','enabled').lower() != 'false':
           """ Footprints isn't disabled, send out an e-mail """
-          footprintsEmail(sender,ticketnumber,commit)
+          self.footprintsEmail(sender,ticketnumber,commit)
         if Config.get('otrs','enabled').lower() != 'false':
           """ OTRS isn't disabled, send out an e-mail """
-          otrsEmail(sender,ticketnumber,commit)
+          self.otrsEmail(sender,ticketnumber,commit)
      
     return True
 
