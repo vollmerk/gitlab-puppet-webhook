@@ -184,7 +184,8 @@ class puppetwebhook(BaseHTTPRequestHandler):
   def otrsEmail(self,sender,ticketnumber,commit):
     log.debug('otrsEmail:: starting proccessing')
     headers = "X-OTRS-FollowUp-SenderType: agent\nX-OTRS-FollowUp-ArticleType: note-internal\n"
-    if re.match('.*FIX[ED]? #' +ticketnumber+ '.*',commit['message'],re.I):
+    REfixed = re.compile('.*fix[ed]?\s*#' + ticketnumber,re.MULTILINE|re.IGNORECASE)
+    if REfixed.search(commit['message']):
       log.debug('otrsEmail:: found FIX #\d+ in commit triggering close')
       headers = headers + "X-OTRS-FollowUp-State: closed successful\n" 
     body = commit['message'] + "\n" + commit['url']
@@ -203,8 +204,9 @@ class puppetwebhook(BaseHTTPRequestHandler):
     log.debug('footprintsEmail:: starting proccessing')
     commands = ''
     time = re.match('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',commit['message'])
+    REfixed = re.compile('.*fix[ed]?\s*#' + ticketnumber,re.MULTILINE|re.IGNORECASE)
     """ Check for FIX right before #"""
-    if re.match('.*FIX[ED]? #' +ticketnumber + '.*',commit['message'],re.I):
+    if REfixed.search(commit['message']):
       log.debug('footprintsEmail:: found FIX #\d+ in commit triggering close')
       commands = 'Status=' + Config.get('footprints','close_status') + "\n"
     """ See if we had some time """
