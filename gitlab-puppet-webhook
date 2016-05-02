@@ -184,7 +184,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
   def otrsEmail(self,sender,ticketnumber,commit):
     log.debug('otrsEmail:: starting proccessing')
     headers = "X-OTRS-FollowUp-SenderType: agent\nX-OTRS-FollowUp-ArticleType: note-internal\n"
-    if re.match('.*FIX[ED]* #' +ticketnumber+ '.*',commit['message']):
+    if re.match('.*FIX[ED]? #' +ticketnumber+ '.*',commit['message'],re.I):
       log.debug('otrsEmail:: found FIX #\d+ in commit triggering close')
       headers = headers + "X-OTRS-FollowUp-State: closed successful\n" 
     body = commit['message'] + "\n" + commit['url']
@@ -201,19 +201,16 @@ class puppetwebhook(BaseHTTPRequestHandler):
   """
   def footprintsEmail(self,sender,ticketnumber,commit):
     log.debug('footprintsEmail:: starting proccessing')
-    """ Check for FIX right before #"""
     commands = ''
-    if re.match('.*FIX[ED]* #' +ticketnumber + '.*',commit['message']):
+    time = re.match('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',commit['message'])
+    """ Check for FIX right before #"""
+    if re.match('.*FIX[ED]? #' +ticketnumber + '.*',commit['message'],re.I):
       log.debug('footprintsEmail:: found FIX #\d+ in commit triggering close')
       commands = 'Status=' + Config.get('footprints','close_status') + "\n"
-    time = re.match('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',commit['message'])
-    else:
-      log.debug('footprintsEmail:: not FIXED so only updating #%s',ticketnumber)
+    """ See if we had some time """
     if time:
       log.debug('sendticketSystem:: found Time string as %s', time.group(1))
       commands = commands + time.group(1) + "\n"
-    else:
-      log.debug('footprintsEmail:: no time specified only updating #%s',ticketnumber)
     body = commands + commit['message'] + "\n" + commit['url']
     subject = 'GITLAB-Push Update ISSUE=' + ticketnumber + ' PROJ=' + Config.get('footprints','project')
     message = "From: %s\nSubject: %s\n%s" % (sender,subject,body)
