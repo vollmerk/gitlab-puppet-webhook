@@ -206,9 +206,13 @@ class puppetwebhook(BaseHTTPRequestHandler):
       log.debug('footprintsEmail:: found FIX #\d+ in commit triggering close')
       commands = 'Status=' + Config.get('footprints','close_status') + "\n"
     time = re.match('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',commit['message'])
+    else:
+      log.debug('footprintsEmail:: not FIXED so only updating #%s',ticketnumber)
     if time:
       log.debug('sendticketSystem:: found Time string as %s', time.group(1))
       commands = commands + time.group(1) + "\n"
+    else:
+      log.debug('footprintsEmail:: no time specified only updating #%s',ticketnumber)
     body = commands + commit['message'] + "\n" + commit['url']
     subject = 'GITLAB-Push Update ISSUE=' + ticketnumber + ' PROJ=' + Config.get('footprints','project')
     message = "From: %s\nSubject: %s\n%s" % (sender,subject,body)
