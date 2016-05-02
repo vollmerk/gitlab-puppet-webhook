@@ -44,7 +44,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
     try:
       smtpObj = smtplib.SMTP(Config.get('email','smtpserver'))
       smtpObj.sendmail(sender,receivers,message)
-      log.info('sendEmail:: Send E-mail to %s from %s Body: %s' % (receivers,sender,message))
+      log.info('sendEmail:: Send E-mail to %s from %s Body:\n%s' % (receivers,sender,message))
     except SMTPException:
       log.critical('sendEmail:: Failed to send e-mail via %s to %s from %s' % (Config.get('main','smtpserver'),receivers,sender))
       return False
@@ -163,10 +163,16 @@ class puppetwebhook(BaseHTTPRequestHandler):
           sender = Config.get('email','from')
         if Config.get('footprints','enabled').lower() != 'false':
           """ Footprints isn't disabled, send out an e-mail """
+          log.debug('footprintsEmail:: enabled proccessing')
           self.footprintsEmail(sender,ticketnumber,commit)
+        else: 
+          log.debug('footprintsEmail:: disabled, not sending')
         if Config.get('otrs','enabled').lower() != 'false':
           """ OTRS isn't disabled, send out an e-mail """
+          log.debug('otrsEmail:: enabled proccessing')
           self.otrsEmail(sender,ticketnumber,commit)
+        else:
+          log.debug('otrsEmail:: disabled not sending')
      
     return True
 
@@ -193,7 +199,6 @@ class puppetwebhook(BaseHTTPRequestHandler):
    and update e-mail to footprints based on the ticket info
   """
   def footprintsEmail(self,sender,ticketnumber,commit):
-
     """ Check for FIX right before #"""
     if re.match('.*FIX[ED]* #' +ticketnumber + '.*',commit['message']):
       log.debug('footprintsEmail:: found FIX #\d+ in commit triggering close')
