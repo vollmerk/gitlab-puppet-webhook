@@ -182,6 +182,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
    agent internal-note update to the ticket in question
   """
   def otrsEmail(self,sender,ticketnumber,commit):
+    log.debug('otrsEmail:: starting proccessing')
     headers = "X-OTRS-FollowUp-SenderType: agent\nX-OTRS-FollowUp-ArticleType: note-internal\n"
     if re.match('.*FIX[ED]* #' +ticketnumber+ '.*',commit['message']):
       log.debug('otrsEmail:: found FIX #\d+ in commit triggering close')
@@ -199,6 +200,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
    and update e-mail to footprints based on the ticket info
   """
   def footprintsEmail(self,sender,ticketnumber,commit):
+    log.debug('footprintsEmail:: starting proccessing')
     """ Check for FIX right before #"""
     if re.match('.*FIX[ED]* #' +ticketnumber + '.*',commit['message']):
       log.debug('footprintsEmail:: found FIX #\d+ in commit triggering close')
