@@ -202,8 +202,8 @@ class puppetwebhook(BaseHTTPRequestHandler):
   """
   def footprintsEmail(self,sender,ticketnumber,commit):
     log.debug('footprintsEmail:: starting proccessing')
-    commands = ''
-    time = re.match('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',commit['message'])
+    commands = None
+    time = re.match('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',commit['message'],re.IGNORECASE)
     REfixed = re.compile('.*fix[ed]?\s*#' + ticketnumber,re.MULTILINE|re.IGNORECASE)
     """ Check for FIX right before #"""
     if REfixed.search(commit['message']):
@@ -213,7 +213,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
     if time:
       log.debug('sendticketSystem:: found Time string as %s', time.group(1))
       commands = commands + time.group(1) + "\n"
-    body = commands + commit['message'] + "\n" + commit['url']
+    body = commands + "\n" + commit['message'] + "\n" + commit['url']
     subject = 'GITLAB-Push Update ISSUE=' + ticketnumber + ' PROJ=' + Config.get('footprints','project')
     message = "From: %s\nSubject: %s\n%s" % (sender,subject,body)
     log.info('footprintsEmail:: Sending E-mail to %s with subject %s'% (Config.get('footprints','to'),subject))
