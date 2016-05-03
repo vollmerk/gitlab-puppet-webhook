@@ -191,7 +191,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
     if REfixed.search(commit['message']):
       log.debug('otrsEmail:: found FIX #\d+ in commit triggering close')
       otrsmsg.add_header('X-OTRS-FollowUp-State','closed successful')
-    otrsmsg.set_payload(commit['message'] + "\n" + commit['url']_
+    otrsmsg.set_payload(commit['message'] + "\n" + commit['url'])
     otrsmsg.add_header('subject','GITLAB-Push Update [Ticket#' + ticketnumber + ']')
     otrsmsg.add_header('from',sender)
     log.info('otrsEmail:: Sending E-mail to %s with subject %s' % (Config.get('otrs','to'),otrsmsg.as_string()))
