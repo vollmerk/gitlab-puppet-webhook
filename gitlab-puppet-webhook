@@ -27,6 +27,7 @@ import json
 import daemon,daemon.pidfile
 import ssl
 import smtplib
+from email import message
 from pwd import getpwnam
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
@@ -183,16 +184,18 @@ class puppetwebhook(BaseHTTPRequestHandler):
   """
   def otrsEmail(self,sender,ticketnumber,commit):
     log.debug('otrsEmail:: starting proccessing')
-    headers = "X-OTRS-FollowUp-SenderType: agent\r\nX-OTRS-FollowUp-ArticleType: note-internal\r\n"
+    otrsmsg = message.Message()
+    otrsmsg.add_header('X-OTRS-FollowUp-SenderType','agent')
+    otrsmsg.add_header('X-OTRS-FollowUp-ArticleType','note-internal')
     REfixed = re.compile('.*fix[ed]?\s*#' + ticketnumber,re.MULTILINE|re.IGNORECASE)
     if REfixed.search(commit['message']):
       log.debug('otrsEmail:: found FIX #\d+ in commit triggering close')
-      headers = headers + "X-OTRS-FollowUp-State: closed successful\r\n" 
-    body = commit['message'] + "\n" + commit['url']
-    subject = 'GITLAB-Push Update [Ticket#' + ticketnumber + ']'
-    message = "From: %s\r\nSubject: %s\r\n%s\r\n%s" % (sender,subject,headers,body)
-    log.info('otrsEmail:: Sending E-mail to %s with subject %s' % (Config.get('otrs','to'),subject))
-    self.sendEmail(sender,Config.get('otrs','to'),message)
+      otrsmsg.add_header('X-OTRS-FollowUp-State','closed successful')
+    otrsmsg.set_payload(commit['message'] + "\n" + commit['url']_
+    otrsmsg.add_header('subject','GITLAB-Push Update [Ticket#' + ticketnumber + ']')
+    otrsmsg.add_header('from',sender)
+    log.info('otrsEmail:: Sending E-mail to %s with subject %s' % (Config.get('otrs','to'),otrsmsg.as_string()))
+    self.sendEmail(sender,Config.get('otrs','to'),otrsmsg.as_string())
 
     return True
 
