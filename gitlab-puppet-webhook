@@ -190,7 +190,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
       headers = headers + "X-OTRS-FollowUp-State: closed successful\n" 
     body = commit['message'] + "\n" + commit['url']
     subject = 'GITLAB-Push Update [Ticket#' + ticketnumber + ']'
-    message = headers + "From: %s\nSubject: %s\n%s" % (sender,subject,body)
+    message = "From: %s\nSubject: %s\n%s\n%s" % (sender,subject,headers,body)
     log.info('otrsEmail:: Sending E-mail to %s with subject %s' % (Config.get('otrs','to'),subject))
     self.sendEmail(sender,Config.get('otrs','to'),message)
 
