@@ -52,6 +52,12 @@ ssl_certfile=/path/to/pemfile
 ; if set it should fork off and run as a daemon, disabling this can help with debug
 daemonize=true
 
+[r10k]
+
+; config
+; Path to your r10k yaml file
+config=/etc/r10k/r10k.yaml
+
 [email]
 
 ; method
