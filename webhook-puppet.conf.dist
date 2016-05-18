@@ -58,6 +58,20 @@ daemonize=true
 ; Path to your r10k yaml file
 config=/etc/r10k/r10k.yaml
 
+[legacy]
+
+; enabled
+; Do we have a legacy monolithic pile of modules?
+; true/false
+enabled=true
+
+; path
+; An assumption is made that the branch / fork matches the environment name in R10K, this
+; option defines what the legacy module path is below the branch/fork name, and will check
+; out the pushed repo into a sub directory of the environment as defined below
+; this is done after the r10k run, make sure your environment.conf lists this directory
+path=legacy-modules
+
 [email]
 
 ; method

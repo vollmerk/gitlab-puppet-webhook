@@ -236,24 +236,24 @@ class puppetwebhook(BaseHTTPRequestHandler):
     except:
       log.info('Unable to run r10k deploy, environments not updated')
 
-    """ Check for path existance """
-    if os.path.exists(os.path.join(Config.get('main','puppet_env_dir'),environment)):
-      log.debug('environment_sync:: %s exists, doing git pull',os.path.join(Config.get('main','puppet_env_dir'),environment))
-      """ Switch to the directory, so git pull acts like you'd expect - git bugs prevent out of path pulls """
-      os.chdir(os.path.join(Config.get('main','puppet_env_dir'),environment))
-      """ We assume it's already been fetched locally """
-      checkoutCmd = 'git checkout %s' % (gitBranch)
-      output = self.run_cmd(checkoutCmd)
-      if output == False:
-        # git checkout failed, try to clone again
-        self.run_cmd('git clone -b %s %s %s' % (gitBranch,git_ssh_url,environment))
-      pullCmd = 'git pull'
-      output = self.run_cmd(pullCmd)
-    else:
-      """ If it doesn't exist, ch to base and git clone it! """
-      os.chdir(Config.get('main','puppet_env_dir'))
-      log.info('environment_sync:: %s does not exist, cloning into new directory',environment)
-      output = self.run_cmd('git clone -b %s %s %s' % (gitBranch,git_ssh_url,environment))
+    """ Check and see if legacy is enabled """
+    if Config.get('legacy','enabled') == 'true':
+      log.debug('environment_sync:: Legacy Enabled, checking monolithic modules out to %s' % (Config.get('legacy','path')))
+      if os.path.exists(os.path.join(Config.get('main','puppet_env_dir'),environment,Config.get('legacy','path'))):
+        os.chdir(os.path.join(Config.get('main','puppet_env_dir'),environment,Config.get('legacy','path')))
+        """ Check the repo out into the current directory """
+        checkoutCmd = 'git checkout %s .' % (gitBranch)
+        output = self.run_cmd(checkoutCmd)
+        if output == False:
+          """ If checkout fails, clone """
+          self.run_cmd('git clone -b %s %s .' % (gitbranch,git_ssh_url))
+        pullCmd = 'git pull'
+        output = self.run-cmd(pullCmd)
+      else:
+        """ If it doesn't exist, ch to base and git clone it! """
+        os.chdir(os.path.join(Config.get('main','puppet_env_dir'),environment))
+        log.info('environment_sync:: %s/%s does not exist, cloning into new directory' % (environment,Config.get('legacy','path')))
+        output = self.run_cmd('git clone -b %s %s %s' % (gitBranch,git_ssh_url,Config.get('legacy','path')))
 
 
 """ 
