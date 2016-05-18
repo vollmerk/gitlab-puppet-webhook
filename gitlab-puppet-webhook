@@ -206,14 +206,14 @@ class puppetwebhook(BaseHTTPRequestHandler):
   def footprintsEmail(self,sender,ticketnumber,commit):
     log.debug('footprintsEmail:: starting proccessing')
     commands = None
-    time = re.match('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',commit['message'],re.IGNORECASE)
+    time = re.compile('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',re.IGNORECASE)
     REfixed = re.compile('.*fix[ed]?\s*#' + ticketnumber,re.MULTILINE|re.IGNORECASE)
     """ Check for FIX right before #"""
     if REfixed.search(commit['message']):
       log.debug('footprintsEmail:: found FIX #\d+ in commit triggering close')
       commands = 'Status=' + Config.get('footprints','close_status') + "\n"
     """ See if we had some time """
-    if time:
+    if time.search(commit['message']):
       log.debug('sendticketSystem:: found Time string as %s', time.group(1))
       commands = commands + time.group(1) + "\n"
     body = commands + "\n" + commit['message'] + "\n" + commit['url']
