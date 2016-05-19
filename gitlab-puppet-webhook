@@ -236,8 +236,8 @@ class puppetwebhook(BaseHTTPRequestHandler):
     try:
       os.chdir(Config.get('main','puppet_env_dir'))
       self.run-cmd(r10kcmd)
-    except as e:
-      log.info('Unable to run r10k deploy, environments not updated %s' % (format(e.errno,e.strerror)))
+    except:
+      log.info('Unable to run r10k deploy, environments not updated')
 
     """ Check and see if legacy is enabled """
     if Config.get('legacy','enabled') == 'true':
