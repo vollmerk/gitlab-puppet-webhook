@@ -70,7 +70,13 @@ enabled=true
 ; option defines what the legacy module path is below the branch/fork name, and will check
 ; out the pushed repo into a sub directory of the environment as defined below
 ; this is done after the r10k run, make sure your environment.conf lists this directory
+; The production branch will always be checked out, you shouldn't be developing against this
+; anymore, so... yup :)
 path=legacy-modules
+
+; gitpath
+; The path to the repo to clone into this legacy path
+gitpath=git@git.fo.com:cheese/bread.git
 
 [email]
 

@@ -245,11 +245,11 @@ class puppetwebhook(BaseHTTPRequestHandler):
       if os.path.exists(os.path.join(Config.get('main','puppet_env_dir'),environment,Config.get('legacy','path'))):
         os.chdir(os.path.join(Config.get('main','puppet_env_dir'),environment,Config.get('legacy','path')))
         """ Check the repo out into the current directory """
-        checkoutCmd = 'git checkout %s .' % (gitBranch)
+        checkoutCmd = 'git checkout production .'
         output = self.run_cmd(checkoutCmd)
         if output == False:
           """ If checkout fails, clone """
-          self.run_cmd('git clone -b %s %s .' % (gitbranch,git_ssh_url))
+          self.run_cmd('git clone -b production %s .' % (Config.get('legacy','gitpath')))
         pullCmd = 'git pull'
         output = self.run-cmd(pullCmd)
       else:
