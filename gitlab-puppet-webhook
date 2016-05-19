@@ -231,9 +231,9 @@ class puppetwebhook(BaseHTTPRequestHandler):
   def environmentSync(self,environment,git_ssh_url,gitBranch):
 
     """ Run R10K to re-sync the environments and modules """
+    r10kcmd = 'r10k deploy environment --puppetfile -c %s' % (Config.get('r10k','config'))
+    log.info('Running R10K:: %s' % (r10kcmd))
     try:
-      r10kcmd = 'r10k deploy environment --puppetfile -c %s' % (Config.get('r10k','config'))
-      log.info('Running R10K:: %s' % (r10kcmd))
       self.run-cmd(r10kcmd)
     except:
       log.info('Unable to run r10k deploy, environments not updated')
