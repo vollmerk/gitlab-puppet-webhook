@@ -232,7 +232,6 @@ class puppetwebhook(BaseHTTPRequestHandler):
 
     """ Run R10K to re-sync the environments and modules """
     r10kcmd = 'r10k deploy environment --puppetfile -c %s' % (Config.get('r10k','config'))
-    log.info('Running R10K:: %s' % (r10kcmd))
     try:
       os.chdir(Config.get('main','puppet_env_dir'))
       self.run_cmd(r10kcmd)
