@@ -63,8 +63,8 @@ class puppetwebhook(BaseHTTPRequestHandler):
     proc.wait()
     """ Check for non zero return code, and log error """
     if proc.returncode != 0:
-      log.critical('run_cmd:: Non-zero exit code:%s executing: %s' % (proc.returncode,cmd))
-      log.critical('run_cmd:: %s',proc.stdout.read())
+      log.info('run_cmd:: Non-zero exit code:%s executing: %s' % (proc.returncode,cmd))
+      log.info('run_cmd:: %s',proc.stdout.read())
       return False
     else:
       log.info('run_cmd:: %s executed sucessfully',cmd)
@@ -236,8 +236,8 @@ class puppetwebhook(BaseHTTPRequestHandler):
     try:
       os.chdir(Config.get('main','puppet_env_dir'))
       self.run-cmd(r10kcmd)
-    except:
-      log.info('Unable to run r10k deploy, environments not updated')
+    except as e:
+      log.info('Unable to run r10k deploy, environments not updated %s' % (format(e.errno,e.strerror)))
 
     """ Check and see if legacy is enabled """
     if Config.get('legacy','enabled') == 'true':
