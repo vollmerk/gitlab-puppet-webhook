@@ -8,8 +8,8 @@ legacy support for a single repo after receiving a gitlab push notification.
 #### Concept
 This application expects you to be using R10K to sync your puppet environments.
 It receives a Gitlab webhook post and acts on the relevant R10K environment(s)
-as well as looking for commit messages which may relate to [Footprints][http://www.bmcsoftware.ca/it-solutions/footprints-service-core.html] ticketing
-system or the [OTRS][https://www.otrs.com/] ticketing system and attempting to update
+as well as looking for commit messages which may relate to [Footprints](http://www.bmcsoftware.ca/it-solutions/footprints-service-core.html) ticketing
+system or the [OTRS](https://www.otrs.com/) ticketing system and attempting to update
 the tickets based on the commit message. 
 
 This application also helps you transition from a monolithic repo to the R10K 
