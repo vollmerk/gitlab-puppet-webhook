@@ -1,21 +1,29 @@
 Gitlab Puppet Webhook
 =======
 
-An open source gitlab hook used to update puppet environments pulled from a
-single repo after receiving a gitlab push notification. This is a stop-gap
-measure before I'm able move to something like r10k
+An open source gitlab hook used to update puppet environments using r10k with
+legacy support for a single repo after receiving a gitlab push notification. 
 
 ---
 #### Concept
-This script expects you to have all of your puppet manifests located in a single
-repo, which is then forked or branched by the developers of your manifests. 
-When a user push's to the configured project the script will check to see if 
-there is an existing git repo clone in the configured puppet environment 
-location. If there isn't it will clone the repo. If there is it will do a git pull. 
+This application expects you to be using R10K to sync your puppet environments.
+It receives a Gitlab webhook post and acts on the relevant R10K environment(s)
+as well as looking for commit messages which may relate to [Footprints][http://www.bmcsoftware.ca/it-solutions/footprints-service-core.html] ticketing
+system or the [OTRS][https://www.otrs.com/] ticketing system and attempting to update
+the tickets based on the commit message. 
+
+This application also helps you transition from a monolithic repo to the R10K 
+module profile/role methodology by supporting a 'legacy' repo that is checked out
+into a defined directory within the environment when it's update. So that you can
+smoothly transition from one to the other. 
+
+Environments are based on branch name, however in legacy mode the 'production' branch
+of the legacy environment is always pulled regardless of committed branch. 
 
 Operations are all logged to /var/log/webhook-puppet.log by default. In order for
 this to work the user that is running the HTTP server must have its SSH Key listed
-as a 'deploy' key on all of the repos that it will need to clone. 
+as a 'deploy' key on all of the repos that it will need to clone, and must have
+SSL certificates. 
 
 ---
 #### REPO mode
@@ -38,7 +46,7 @@ else
 ```
 
 ---
-#### Branch mode
+#### Branch mode **INCOMPATIBLE WITH R10K**
 In `BRANCH` mode the expectation is there is a single repo (group owned) and
 the developers do all of their work in branches. When a git PUSH happens the webhook
 will check for a directory within your puppet environment path that matches the
@@ -60,7 +68,7 @@ else
 ---
 #### E-mail to Ticket system support
   The webhook can cause specially formatted e-mails to be sent to the configured location
-  currently Footprints is the only ticketing system supported, but I hope to add OTRS soon
+  currently Footprints is the only ticketing system supported, with full OTRS support coming soon. 
   
   Relevent configuration options are as follows
 
@@ -72,6 +80,8 @@ else
   [footprints] project - Workspace # in footprints
   [footprints] to - the TO: address for e-mails
   [footprints] closed_status - Status that tickets should be set to if "FIX #[TICKETID]" is found in commit message
+
+  OTRS configuration settings are listed under [otrs]
 
 ---
 #### gitlab-puppet-webhook
@@ -90,7 +100,7 @@ else
   yum -y install python-pip
   pip install --upgrade python-daemon
 
-#### Using Puppet Installer
+#### Using Puppet Installer **CURRENTLY BROKEN**
 
   Look at /installer/README.md for instructions on using the provided puppet installer
 
