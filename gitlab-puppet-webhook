@@ -81,6 +81,21 @@ class puppetwebhook(BaseHTTPRequestHandler):
     """ Read in the json string """
     self.rfile._sock.settimeout(10)
     json_string = self.rfile.read(int(self.headers['Content-Length']))
+
+    """ Check for the secret_token config, if specified check X-Gitlab-Token header """
+    secret = False
+    try:
+      secret = Config.get('main','secret_token')
+    except:
+      log.debug('do_POST:: No secret token defined, accepting incoming post')
+
+    if secret:
+      if secret != self.headers['X-Gitlab-Token']:
+        log.debug('do_POST:: Secret %s does not match X-Gitlab-Token %s ignoring post' % (secret,self.headers['X-Gitlab-Token']))
+        return False
+      else:
+        log.debug('do_POST:: Secret and X-Gitlab-Token match accepting post')
+
     log.debug('do_POST:: Received Json String %s',json_string)
 
     """ We're going to say we're ok regardless of what actually happens """
@@ -108,9 +123,15 @@ class puppetwebhook(BaseHTTPRequestHandler):
       """ Check the environment_method config option """
       if Config.get('main','environment_method') == 'repo':
         """ Make sure we're not dealing with a protected/prohibited user/env """
-        repoBase = data['repository']['git_ssh_url'].split(':')[1].split('/')[0]
+        try:
+          repoBase = data['repository']['git_ssh_url'].split(':')[1].split('/')[0]
+        except:
+          log.debug('Invalid Git SSH Url in payload unable to determine repoBase %s' % (data['repository']['git_ssh_url']))
       elif Config.get('main','environment_method') == 'branch':
-        repoBase = data['ref'].split('/')[2]
+        try:
+          repoBase = data['ref'].split('/')[2]
+        except:
+          log.debug('Invalid reference, unable to split and determine repoBase %s' % (data['ref']))
       else:
         log.info('do_POST:: Invalid envrionment_method in config file, doing nothing')
         return False

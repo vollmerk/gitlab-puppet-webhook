@@ -11,6 +11,12 @@ project_name=puppet-manifests
 ; A comma delimited list of environments that shouldn't be touched!, no matter what!
 protected_environments=outage
 
+; Secret Token
+; If you have defined a secret token in Gitlab for this webhook specify it here
+; if this setting is defined the token will be _REQUIRED_ to not require it comment
+; out this setting
+;secret_token=token
+
 ; environment_method
 ; Method used to determine environment name, possible values are repo and branch. 
 ; repo - Environment is defined by the root name of the repo, users are expected to fork from parent repo
