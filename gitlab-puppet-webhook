@@ -296,6 +296,12 @@ def runLaunch():
   try:
     server.serve_forever()
     log.info(':Main:: Starting HTTP Server on port %s',Config.get('main','http_port'))
+    """ DEBUG Log current settings """
+    log.debug(':Main:: Config.environment_method [%s]',Config.get('main','environment_method'))
+    log.debug(':Main:: Config.production_environment [%s]',Config.get('main','production_environment'))
+    log.debug(':Main:: Config.project_name [%s]',Config.get('main','project_name'))
+    log.debug(':Main:: Config.log_file [%s]',Config.get('main','log_file'))
+    log.debug(':Main:: Config.runas [%s]',Config.get('main','runas'))
   except KeyboardInterrupt,SystemExit:
     log.info(':Main:: Ctrl-C Detected, shutting down')
     server.socket.close()
