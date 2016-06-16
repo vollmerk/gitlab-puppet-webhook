@@ -2,11 +2,10 @@
 Description=Gitlab-Puppet-Webhook Daemon
 
 [Service]
+Type=simple
 EnvironmentFile=/opt/gitlab-puppet-webhook/startup/systemd.conf
-Type=oneshot
 ExecStart=/opt/gitlab-puppet-webhook/gitlab-puppet-webhook
 ExecStop=/bin/kill $PID
-Type=forking
 KillMode=process
 
 [Install]
