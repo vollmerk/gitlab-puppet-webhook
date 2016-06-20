@@ -25,7 +25,7 @@ environment_method=repo
 
 ; production_environment
 ; The name of your production environment, this will be checked out as 'production'
-production_envrionment=master
+production_environment=master
 
 ; log_file
 ; Define the log file where output from the webhook will be saved, uses Python's 
