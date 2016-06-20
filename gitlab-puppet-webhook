@@ -125,7 +125,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
         method = Config.get('main','environment_method')
       except:
         log.debug('do_POST:: Invalid Config(main,environment_method) defaulting to repo')
-        method = 'repo'
+        method = 'brach'
 
       if method == 'repo':
         """ Make sure we're not dealing with a protected/prohibited user/env """
