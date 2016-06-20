@@ -69,7 +69,7 @@ config=/etc/r10k/r10k.yaml
 ; enabled
 ; Do we have a legacy monolithic pile of modules?
 ; true/false
-enabled=true
+enabled=false
 
 ; path
 ; An assumption is made that the branch / fork matches the environment name in R10K, this
