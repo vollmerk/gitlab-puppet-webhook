@@ -121,13 +121,19 @@ class puppetwebhook(BaseHTTPRequestHandler):
         return False
 
       """ Check the environment_method config option """
-      if Config.get('main','environment_method') == 'repo':
+      try:
+        method = Config.get('main','environment_method')
+      except:
+        log.debug('do_POST:: Invalid Config(main,environment_method) defaulting to repo')
+        method = 'repo'
+
+      if method == 'repo':
         """ Make sure we're not dealing with a protected/prohibited user/env """
         try:
           repoBase = data['repository']['git_ssh_url'].split(':')[1].split('/')[0]
         except:
           log.debug('Invalid Git SSH Url in payload unable to determine repoBase %s' % (data['repository']['git_ssh_url']))
-      elif Config.get('main','environment_method') == 'branch':
+      elif method == 'branch':
         try:
           repoBase = data['ref'].split('/')[2]
         except:
