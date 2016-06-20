@@ -144,13 +144,13 @@ class puppetwebhook(BaseHTTPRequestHandler):
 
       log.debug('do_POST:: Branch [%s] being cloned into %s' % (repoBranch,repoBase))
 
-      if Config.get('main','environment_method') == 'branch':
+      if method == 'branch':
         """ If we're on the production branch, reset repoBase to production """
         if repoBranch == Config.get('main','production_environment'):
           repoBase = 'production'
         else:
           repoBase = repoBranch
-      elif Config.get('main','environment_method') == 'repo':
+      elif method == 'repo':
         """ Check the repoBase for production_environment matching """
         if repoBase == Config.get('main','production_environment'):
           repoBase = 'production'
