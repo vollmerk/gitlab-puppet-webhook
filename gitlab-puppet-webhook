@@ -254,7 +254,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
   def environmentSync(self,environment,git_ssh_url,gitBranch):
 
     """ Run R10K to re-sync the environments and modules """
-    r10kcmd = 'r10k deploy environment --puppetfile -c %s' % (getConfig('r10k','config'))
+    r10kcmd = 'umask 0027;r10k deploy environment --puppetfile -c %s' % (getConfig('r10k','config'))
     try:
       os.chdir(getConfig('main','puppet_env_dir'))
       self.run_cmd(r10kcmd)
@@ -279,16 +279,6 @@ class puppetwebhook(BaseHTTPRequestHandler):
         os.chdir(os.path.join(getConfig('main','puppet_env_dir'),environment))
         log.info('environment_sync:: %s/%s does not exist, cloning into new directory' % (environment,getConfig('legacy','path')))
         output = self.run_cmd('git clone -b %s %s %s' % (gitBranch,git_ssh_url,getConfig('legacy','path')))
-
-    """ Correct any f'd up permissions """
-    if len(getConfig('main','puppet_env_dir') < 3: 
-      log.info('Invalid puppet env dir not doing chmod cause it would make a mess!!!!!')
-    else:
-      correctPerms = 'find %s -type d -exec chmod 750 {} \;;find %s -type f -exec chmod 640 {} \;' % (getConfig('main','puppet_env_dir'),getConfig('main','puppet_env_dir'))
-      try:
-        self.run_cmd(correctPerms)
-      except:
-        log.info('Unable to run permission correction command, verify permissions')
 
     return True
 
