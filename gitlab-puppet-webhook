@@ -281,11 +281,14 @@ class puppetwebhook(BaseHTTPRequestHandler):
         output = self.run_cmd('git clone -b %s %s %s' % (gitBranch,git_ssh_url,getConfig('legacy','path')))
 
     """ Correct any f'd up permissions """
-    correctPerms = 'find %s -type d -exec chmod 750 {} \;;find %s -type f -exec chmod 640 {} \;' % (getConfig('main','puppet_env_dir'),getConfig('main','puppet_env_dir'))
-    try:
-      self.run_cmd(correctPerms)
-    except:
-      log.info('Unable to run permission correction command, verify permissions')
+    if len(getConfig('main','puppet_env_dir') < 3: 
+      log.info('Invalid puppet env dir not doing chmod cause it would make a mess!!!!!')
+    else:
+      correctPerms = 'find %s -type d -exec chmod 750 {} \;;find %s -type f -exec chmod 640 {} \;' % (getConfig('main','puppet_env_dir'),getConfig('main','puppet_env_dir'))
+      try:
+        self.run_cmd(correctPerms)
+      except:
+        log.info('Unable to run permission correction command, verify permissions')
 
     return True
 
