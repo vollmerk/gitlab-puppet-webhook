@@ -43,11 +43,11 @@ class puppetwebhook(BaseHTTPRequestHandler):
 
   def sendEmail(self,sender,receivers,message):
     try:
-      smtpObj = smtplib.SMTP(Config.get('email','smtpserver'))
+      smtpObj = smtplib.SMTP(getConfig('email','smtpserver'))
       smtpObj.sendmail(sender,receivers,message)
       log.info('sendEmail:: Send E-mail to %s from %s Body:\n%s' % (receivers,sender,message))
     except SMTPException:
-      log.critical('sendEmail:: Failed to send e-mail via %s to %s from %s' % (Config.get('main','smtpserver'),receivers,sender))
+      log.critical('sendEmail:: Failed to send e-mail via %s to %s from %s' % (getConfig('main','smtpserver'),receivers,sender))
       return False
     return True
 
@@ -56,7 +56,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
   """
   def run_cmd(self,cmd):
     """ Make sure git looks in the right homedir """
-    os.environ['HOME'] = os.path.expanduser('~' + Config.get('main','runas'))
+    os.environ['HOME'] = os.path.expanduser('~' + getConfig('main','runas'))
     log.debug('run_cmd:: %s' % cmd)
     """ Run the command, and then wait for it to finish """
     proc = subprocess.Popen(cmd.split(),stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
@@ -82,19 +82,15 @@ class puppetwebhook(BaseHTTPRequestHandler):
     self.rfile._sock.settimeout(10)
     json_string = self.rfile.read(int(self.headers['Content-Length']))
 
-    """ Check for the secret_token config, if specified check X-Gitlab-Token header """
-    secret = False
-    try:
-      secret = Config.get('main','secret_token')
-    except:
-      log.debug('do_POST:: No secret token defined, accepting incoming post')
 
-    if secret:
+    if getConfig('main','secret_token'):
       if secret != self.headers['X-Gitlab-Token']:
         log.debug('do_POST:: Secret %s does not match X-Gitlab-Token %s ignoring post' % (secret,self.headers['X-Gitlab-Token']))
         return False
       else:
         log.debug('do_POST:: Secret and X-Gitlab-Token match accepting post')
+    else:
+      log.debug('do_POST:: No secret token defined, accepting incoming post')
 
     log.debug('do_POST:: Received Json String %s',json_string)
 
@@ -111,8 +107,8 @@ class puppetwebhook(BaseHTTPRequestHandler):
     data = json.loads(json_string)
 
     """ Look for our defined puppet project in the json """
-    if data['repository']['name'] == Config.get('main','project_name'):
-      log.info('do_POST:: %s detected in JSON starting processing',Config.get('main','project_name'))
+    if data['repository']['name'] == getConfig('main','project_name'):
+      log.info('do_POST:: %s detected in JSON starting processing',getConfig('main','project_name'))
 
       try: 
         repoBranch = data['ref'].split('/')[2]
@@ -122,7 +118,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
 
       """ Check the environment_method config option """
       try:
-        method = Config.get('main','environment_method')
+        method = getConfig('main','environment_method')
       except:
         log.debug('do_POST:: Invalid Config(main,environment_method) defaulting to repo')
         method = 'brach'
@@ -146,19 +142,19 @@ class puppetwebhook(BaseHTTPRequestHandler):
 
       if method == 'branch':
         """ If we're on the production branch, reset repoBase to production """
-        if repoBranch == Config.get('main','production_environment'):
+        if repoBranch == getConfig('main','production_environment'):
           repoBase = 'production'
         else:
           repoBase = repoBranch
       elif method == 'repo':
         """ Check the repoBase for production_environment matching """
-        if repoBase == Config.get('main','production_environment'):
+        if repoBase == getConfig('main','production_environment'):
           repoBase = 'production'
       else:
         log.critical('do_POST:: Invalid environment_method specified doing nothing')
         return False
 
-      if repoBase in Config.get('main','protected_environments'):
+      if repoBase in getConfig('main','protected_environments'):
         log.info('do_POST:: %s is a protected environment, halting',repoBase)
       else:
         """ Run the git pull, create dir if needed """
@@ -167,14 +163,14 @@ class puppetwebhook(BaseHTTPRequestHandler):
         self.sendTicketSystem(data,repoBranch,repoBase)
 
     else:
-      log.debug('do_POST:: %s not in JSON, ignoring',Config.get('main','project_name'))
+      log.debug('do_POST:: %s not in JSON, ignoring',getConfig('main','project_name'))
 
   def sendTicketSystem(self,data,repoBranch,repoBase):
     """ Send e-mail based on method, and configured ticket system modules """
-    if Config.get('email','method') == 'production' and repoBase != 'production':
+    if getConfig('email','method') == 'production' and repoBase != 'production':
       log.debug('sendTicketSystem:: repoBase not production not e-mailing to ticket system(s)')
       return False
-    elif Config.get('email','method') == 'development' and repoBase == 'production':
+    elif getConfig('email','method') == 'development' and repoBase == 'production':
       log.debug('sendTicketSystem:: repoBase is production, method is development not e-mailing')
       return False
 
@@ -188,14 +184,14 @@ class puppetwebhook(BaseHTTPRequestHandler):
         try:
           sender = '"'+commit['author']['name']+'" <' +commit['author']['email'] + '>'
         except:
-          sender = Config.get('email','from')
-        if Config.get('footprints','enabled').lower() != 'false':
+          sender = getConfig('email','from')
+        if getConfig('footprints','enabled').lower() != 'false':
           """ Footprints isn't disabled, send out an e-mail """
           log.debug('footprintsEmail:: enabled proccessing')
           self.footprintsEmail(sender,ticketnumber,commit)
         else: 
           log.debug('footprintsEmail:: disabled, not sending')
-        if Config.get('otrs','enabled').lower() != 'false':
+        if getConfig('otrs','enabled').lower() != 'false':
           """ OTRS isn't disabled, send out an e-mail """
           log.debug('otrsEmail:: enabled proccessing')
           self.otrsEmail(sender,ticketnumber,commit)
@@ -221,8 +217,8 @@ class puppetwebhook(BaseHTTPRequestHandler):
     otrsmsg.set_payload(commit['message'] + "\n" + commit['url'])
     otrsmsg.add_header('subject','GITLAB-Push Update [Ticket#' + ticketnumber + ']')
     otrsmsg.add_header('from',sender)
-    log.info('otrsEmail:: Sending E-mail to %s with subject %s' % (Config.get('otrs','to'),otrsmsg.as_string()))
-    self.sendEmail(sender,Config.get('otrs','to'),otrsmsg.as_string())
+    log.info('otrsEmail:: Sending E-mail to %s with subject %s' % (getConfig('otrs','to'),otrsmsg.as_string()))
+    self.sendEmail(sender,getConfig('otrs','to'),otrsmsg.as_string())
 
     return True
 
@@ -238,16 +234,16 @@ class puppetwebhook(BaseHTTPRequestHandler):
     """ Check for FIX right before #"""
     if REfixed.search(commit['message']):
       log.debug('footprintsEmail:: found FIX #\d+ in commit triggering close')
-      commands = 'Status=' + Config.get('footprints','close_status') + "\n"
+      commands = 'Status=' + getConfig('footprints','close_status') + "\n"
     """ See if we had some time """
     if time.search(commit['message']):
       log.debug('sendticketSystem:: found Time string as %s', time.group(1))
       commands = commands + time.group(1) + "\n"
     body = commands + "\n" + commit['message'] + "\n" + commit['url']
-    subject = 'GITLAB-Push Update ISSUE=' + ticketnumber + ' PROJ=' + Config.get('footprints','project')
+    subject = 'GITLAB-Push Update ISSUE=' + ticketnumber + ' PROJ=' + getConfig('footprints','project')
     message = "From: %s\nSubject: %s\n%s" % (sender,subject,body)
-    log.info('footprintsEmail:: Sending E-mail to %s with subject %s'% (Config.get('footprints','to'),subject))
-    self.sendEmail(sender,Config.get('footprints','to'),message)
+    log.info('footprintsEmail:: Sending E-mail to %s with subject %s'% (getConfig('footprints','to'),subject))
+    self.sendEmail(sender,getConfig('footprints','to'),message)
 
     return True
 
@@ -258,31 +254,31 @@ class puppetwebhook(BaseHTTPRequestHandler):
   def environmentSync(self,environment,git_ssh_url,gitBranch):
 
     """ Run R10K to re-sync the environments and modules """
-    r10kcmd = 'r10k deploy environment --puppetfile -c %s' % (Config.get('r10k','config'))
+    r10kcmd = 'r10k deploy environment --puppetfile -c %s' % (getConfig('r10k','config'))
     try:
-      os.chdir(Config.get('main','puppet_env_dir'))
+      os.chdir(getConfig('main','puppet_env_dir'))
       self.run_cmd(r10kcmd)
     except:
       log.info('Unable to run r10k deploy, environments not updated')
 
     """ Check and see if legacy is enabled """
-    if Config.get('legacy','enabled') == 'true':
-      log.debug('environment_sync:: Legacy Enabled, checking monolithic modules out to %s' % (Config.get('legacy','path')))
-      if os.path.exists(os.path.join(Config.get('main','puppet_env_dir'),environment,Config.get('legacy','path'))):
-        os.chdir(os.path.join(Config.get('main','puppet_env_dir'),environment,Config.get('legacy','path')))
+    if getConfig('legacy','enabled') == 'true':
+      log.debug('environment_sync:: Legacy Enabled, checking monolithic modules out to %s' % (getConfig('legacy','path')))
+      if os.path.exists(os.path.join(getConfig('main','puppet_env_dir'),environment,getConfig('legacy','path'))):
+        os.chdir(os.path.join(getConfig('main','puppet_env_dir'),environment,getConfig('legacy','path')))
         """ Check the repo out into the current directory """
         checkoutCmd = 'git checkout production .'
         output = self.run_cmd(checkoutCmd)
         if output == False:
           """ If checkout fails, clone """
-          self.run_cmd('git clone -b production %s .' % (Config.get('legacy','gitpath')))
+          self.run_cmd('git clone -b production %s .' % (getConfig('legacy','gitpath')))
         pullCmd = 'git pull'
         output = self.run-cmd(pullCmd)
       else:
         """ If it doesn't exist, ch to base and git clone it! """
-        os.chdir(os.path.join(Config.get('main','puppet_env_dir'),environment))
-        log.info('environment_sync:: %s/%s does not exist, cloning into new directory' % (environment,Config.get('legacy','path')))
-        output = self.run_cmd('git clone -b %s %s %s' % (gitBranch,git_ssh_url,Config.get('legacy','path')))
+        os.chdir(os.path.join(getConfig('main','puppet_env_dir'),environment))
+        log.info('environment_sync:: %s/%s does not exist, cloning into new directory' % (environment,getConfig('legacy','path')))
+        output = self.run_cmd('git clone -b %s %s %s' % (gitBranch,git_ssh_url,getConfig('legacy','path')))
 
 
 """ 
@@ -292,22 +288,22 @@ def runLaunch():
   """ Restart the Logger now that we've switched to the new UID """
   startLogger()
   
-  server = HTTPServer(('',int(Config.get('main','http_port'))),puppetwebhook)
+  server = HTTPServer(('',int(getConfig('main','http_port'))),puppetwebhook)
   """ Try to start HTTP server """
   try:
-    server.socket = ssl.wrap_socket(server.socket,certfile=Config.get('main','ssl_certfile'),server_side=True)
+    server.socket = ssl.wrap_socket(server.socket,certfile=getConfig('main','ssl_certfile'),server_side=True)
   except: 
     log.info(':Main:: Error creating SSL socket')
 
   try:
     server.serve_forever()
-    log.info(':Main:: Starting HTTP Server on port %s',Config.get('main','http_port'))
+    log.info(':Main:: Starting HTTP Server on port %s',getConfig('main','http_port'))
     """ DEBUG Log current settings """
-    log.debug(':Main:: Config.environment_method [%s]',Config.get('main','environment_method'))
-    log.debug(':Main:: Config.production_environment [%s]',Config.get('main','production_environment'))
-    log.debug(':Main:: Config.project_name [%s]',Config.get('main','project_name'))
-    log.debug(':Main:: Config.log_file [%s]',Config.get('main','log_file'))
-    log.debug(':Main:: Config.runas [%s]',Config.get('main','runas'))
+    log.debug(':Main:: Config.environment_method [%s]',getConfig('main','environment_method'))
+    log.debug(':Main:: Config.production_environment [%s]',getConfig('main','production_environment'))
+    log.debug(':Main:: Config.project_name [%s]',getConfig('main','project_name'))
+    log.debug(':Main:: Config.log_file [%s]',getConfig('main','log_file'))
+    log.debug(':Main:: Config.runas [%s]',getConfig('main','runas'))
   except KeyboardInterrupt,SystemExit:
     log.info(':Main:: Ctrl-C Detected, shutting down')
     server.socket.close()
@@ -327,9 +323,9 @@ def startLogger():
     Init Logging, use values from config we store 7 historical copies by
     default, maybe move that into the config?
   """
-  if Config.get('main','log_level') == 'DEBUG':
+  if getConfig('main','log_level') == 'DEBUG':
     log_level = logging.DEBUG
-  elif Config.get('main','log_level') == 'INFO':
+  elif getConfig('main','log_level') == 'INFO':
     log_level = logging.INFO
   else:
     log_level = logging.WARNING
@@ -339,32 +335,59 @@ def startLogger():
     if len(log.handlers):
       return True
     log.setLevel(log_level)
-    log_handle = logging.handlers.RotatingFileHandler(Config.get('main','log_file'),maxBytes=Config.get('main','log_max_size'),backupCount=7)
+    log_handle = logging.handlers.RotatingFileHandler(getConfig('main','log_file'),maxBytes=getConfig('main','log_max_size'),backupCount=7)
     log_format = logging.Formatter("%(asctime)s %(levelname)s %(message)s","%B %d %H:%M:%S")
     log_handle.setFormatter(log_format)
     log.addHandler(log_handle)
   except IOError:
-    print ':Main:: IOError opening %s verify permissions' % (Config.get('main','log_file'))
+    print ':Main:: IOError opening %s verify permissions' % (getConfig('main','log_file'))
     sys.exit(1)
+
+def getConfig(section,name):
+
+  """ Wrapper for getConfig('section','name') because that stops the app if it errors :( """
+  if not Config.has_section(section):
+    log.critical(':Config:: %s section not found, your config file is invalid please verify and restart service' % (section))
+    Config.add_section(section)
+
+  if not Config.has_option(section,name):
+    log.critical(':Config:: %s config option in %s section is missing, using default' % (name,section))
+    Config.set(section,name,distConfig.get(section,name))
+
+  return Config.get(section,name)
+
  
 if __name__ == '__main__':
-  global Config
+  global Config,distConfig
   """ Load the Config file ./webhook-puppet.conf """
+  distConfig = ConfigParser.ConfigParser()
   Config = ConfigParser.ConfigParser()
+  try:
+    distConfig.read(os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf.dist')
+  except IOError:
+    print ':Main:: IOError opening %s verify permissions, no defaults loaded application may crash if running config is incorrect' % (os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf.dist')
+
   try:
     Config.read(os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf')
   except IOError:
     print ':Main:: IOError opening %s verify permissions' % (os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf')
     sys.exit(1)
 
-  daemonuid = getpwnam(Config.get('main','runas')).pw_uid
-  daemongid = getpwnam(Config.get('main','runas')).pw_gid
+  """ Config and log must be global """
+  startLogger()
+
+  if getConfig('main','daemonize') != 'true':
+    print ':Main:: Daemonize disabled, not forking off'
+    startLogger()
+    runLaunch()
+      
+
+  daemonuid = getpwnam(getConfig('main','runas')).pw_uid
+  daemongid = getpwnam(getConfig('main','runas')).pw_gid
   if daemongid == 0 or daemonuid == 0:
     print 'Aborting:: service cannot run as ROOT'
     sys.exit(1)
 
-  """ Config and log must be global """
-  startLogger()
 
 
   """ python-daemon doesn't gracefully handle the pid lock file not being writeable so check manually """
@@ -376,7 +399,7 @@ if __name__ == '__main__':
     sys.exit(1)
 
   try:
-    log.debug('Starting Daemon as %s (%s:%s)' % (Config.get('main','runas'),daemonuid,daemongid))
+    log.debug('Starting Daemon as %s (%s:%s)' % (getConfig('main','runas'),daemonuid,daemongid))
     logging.shutdown()
     with daemon.DaemonContext(
       pidfile=daemon.pidfile.PIDLockFile(os.path.dirname(os.path.abspath(__file__)) + '/gitlab-puppet-webhook.pid'),

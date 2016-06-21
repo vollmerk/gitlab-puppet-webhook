@@ -5,7 +5,7 @@ http_port=7010
 
 ; project_name
 ; This is the name of your project, as listed in gitlab
-project_name=puppet-manifests
+project_name=puppet
 
 ; protected_environments
 ; A comma delimited list of environments that shouldn't be touched!, no matter what!
@@ -21,7 +21,7 @@ protected_environments=outage
 ; Method used to determine environment name, possible values are repo and branch. 
 ; repo - Environment is defined by the root name of the repo, users are expected to fork from parent repo
 ; branch - Environment is defined by the branch name of the master repo
-environment_method=repo
+environment_method=branch
 
 ; production_environment
 ; The name of your production environment, this will be checked out as 'production'
