@@ -83,9 +83,9 @@ class puppetwebhook(BaseHTTPRequestHandler):
     json_string = self.rfile.read(int(self.headers['Content-Length']))
 
 
-    if getConfig('main','secret_token'):
-      if secret != self.headers['X-Gitlab-Token']:
-        log.debug('do_POST:: Secret %s does not match X-Gitlab-Token %s ignoring post' % (secret,self.headers['X-Gitlab-Token']))
+    if getConfig('main','secret_token') != None:
+      if getConfig('main','secret_token') != self.headers['X-Gitlab-Token']:
+        log.debug('do_POST:: Secret %s does not match X-Gitlab-Token %s ignoring post' % (getConfig('main','secret_token'),self.headers['X-Gitlab-Token']))
         return False
       else:
         log.debug('do_POST:: Secret and X-Gitlab-Token match accepting post')
@@ -279,6 +279,15 @@ class puppetwebhook(BaseHTTPRequestHandler):
         os.chdir(os.path.join(getConfig('main','puppet_env_dir'),environment))
         log.info('environment_sync:: %s/%s does not exist, cloning into new directory' % (environment,getConfig('legacy','path')))
         output = self.run_cmd('git clone -b %s %s %s' % (gitBranch,git_ssh_url,getConfig('legacy','path')))
+
+    """ Correct any f'd up permissions """
+    correctPerms = 'find %s -type d -exec chmod 750 {} \;;find %s -type f -exec chmod 640 {} \;' % (getConfig('main','puppet_env_dir'),getConfig('main','puppet_env_dir'))
+    try:
+      self.run_cmd(correctPerms)
+    except:
+      log.info('Unable to run permission correction command, verify permissions')
+
+    return True
 
 
 """ 
