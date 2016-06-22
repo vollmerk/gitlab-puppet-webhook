@@ -279,7 +279,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
         """ If it doesn't exist, ch to base and git clone it! """
         os.chdir(os.path.join(getConfig('main','puppet_env_dir'),environment))
         log.info('environment_sync:: %s/%s does not exist, cloning into new directory' % (environment,getConfig('legacy','path')))
-        output = self.run_cmd('git clone -b %s %s %s' % (gitBranch,git_ssh_url,getConfig('legacy','path')))
+        output = self.run_cmd('git clone -b %s %s %s' % (gitBranch,getConfig('legacy','gitpath'),getConfig('legacy','path')))
 
     return True
 
