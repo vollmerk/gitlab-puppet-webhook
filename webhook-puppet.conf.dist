@@ -3,10 +3,6 @@
 ; The TCP port that the server should bind to, defaults to 7010
 http_port=7010
 
-; project_name
-; This is the name of your project, as listed in gitlab
-project_name=puppet
-
 ; protected_environments
 ; A comma delimited list of environments that shouldn't be touched!, no matter what!
 protected_environments=outage

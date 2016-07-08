@@ -108,64 +108,62 @@ class puppetwebhook(BaseHTTPRequestHandler):
     data = json.loads(json_string)
 
     """ Look for our defined puppet project in the json """
-    if data['repository']['name'] == getConfig('main','project_name'):
-      log.info('do_POST:: %s detected in JSON starting processing',getConfig('main','project_name'))
+    log.info('do_POST:: Incoming Hook detected in JSON starting processing')
 
-      try: 
-        repoBranch = data['ref'].split('/')[2]
-      except:
-        log.info('do_POST:: Unable to determine branch aborting post')
-        return False
+    try: 
+      repoBranch = data['ref'].split('/')[2]
+    except:
+      log.info('do_POST:: Unable to determine branch aborting post')
+      return False
 
-      """ Check the environment_method config option """
+    """ Check the environment_method config option """
+    try:
+      method = getConfig('main','environment_method')
+    except:
+      log.debug('do_POST:: Invalid Config(main,environment_method) defaulting to repo')
+      method = 'brach'
+
+    if method == 'repo':
+      """ Make sure we're not dealing with a protected/prohibited user/env """
       try:
-        method = getConfig('main','environment_method')
+        repoBase = data['repository']['git_ssh_url'].split(':')[1].split('/')[0]
       except:
-        log.debug('do_POST:: Invalid Config(main,environment_method) defaulting to repo')
-        method = 'brach'
-
-      if method == 'repo':
-        """ Make sure we're not dealing with a protected/prohibited user/env """
-        try:
-          repoBase = data['repository']['git_ssh_url'].split(':')[1].split('/')[0]
-        except:
-          log.debug('Invalid Git SSH Url in payload unable to determine repoBase %s' % (data['repository']['git_ssh_url']))
-      elif method == 'branch':
-        try:
-          repoBase = data['ref'].split('/')[2]
-        except:
-          log.debug('Invalid reference, unable to split and determine repoBase %s' % (data['ref']))
-      else:
-        log.info('do_POST:: Invalid envrionment_method in config file, doing nothing')
-        return False
-
-      log.debug('do_POST:: Branch [%s] being cloned into %s' % (repoBranch,repoBase))
-
-      if method == 'branch':
-        """ If we're on the production branch, reset repoBase to production """
-        if repoBranch == getConfig('main','production_environment'):
-          repoBase = 'production'
-        else:
-          repoBase = repoBranch
-      elif method == 'repo':
-        """ Check the repoBase for production_environment matching """
-        if repoBase == getConfig('main','production_environment'):
-          repoBase = 'production'
-      else:
-        log.critical('do_POST:: Invalid environment_method specified doing nothing')
-        return False
-
-      if repoBase in getConfig('main','protected_environments'):
-        log.info('do_POST:: %s is a protected environment, halting',repoBase)
-      else:
-        """ Run the git pull, create dir if needed """
-        log.info('do_POST:: %s is not a protected environment, syncing',repoBase)
-        self.environmentSync(repoBase,data['repository']['git_ssh_url'],repoBranch)
-        self.sendTicketSystem(data,repoBranch,repoBase)
-
+        log.debug('Invalid Git SSH Url in payload unable to determine repoBase %s' % (data['repository']['git_ssh_url']))
+    elif method == 'branch':
+      try:
+        repoBase = data['ref'].split('/')[2]
+      except:
+        log.debug('Invalid reference, unable to split and determine repoBase %s' % (data['ref']))
     else:
-      log.debug('do_POST:: %s not in JSON, ignoring',getConfig('main','project_name'))
+      log.info('do_POST:: Invalid envrionment_method in config file, doing nothing')
+    return False
 
+    log.debug('do_POST:: Branch [%s] being cloned into %s' % (repoBranch,repoBase))
+
+    if method == 'branch':
+      """ If we're on the production branch, reset repoBase to production """
+      if repoBranch == getConfig('main','production_environment'):
+        repoBase = 'production'
+      else:
+        repoBase = repoBranch
+    elif method == 'repo':
+      """ Check the repoBase for production_environment matching """
+      if repoBase == getConfig('main','production_environment'):
+        repoBase = 'production'
+    else:
+      log.critical('do_POST:: Invalid environment_method specified doing nothing')
+      return False
+
+    if repoBase in getConfig('main','protected_environments'):
+      log.info('do_POST:: %s is a protected environment, halting',repoBase)
+    else:
+      """ Run the git pull, create dir if needed """
+      log.info('do_POST:: %s is not a protected environment, syncing',repoBase)
+      self.environmentSync(repoBase,data['repository']['git_ssh_url'],repoBranch)
+      self.sendTicketSystem(data,repoBranch,repoBase)
+
+  """ sendTicketSystem """
+  """ Sends e-mail to a ticket system """
   def sendTicketSystem(self,data,repoBranch,repoBase):
     """ Send e-mail based on method, and configured ticket system modules """
     if getConfig('email','method') == 'production' and repoBase != 'production':
@@ -304,7 +302,6 @@ def runLaunch():
     """ DEBUG Log current settings """
     log.debug(':Main:: Config.environment_method [%s]',getConfig('main','environment_method'))
     log.debug(':Main:: Config.production_environment [%s]',getConfig('main','production_environment'))
-    log.debug(':Main:: Config.project_name [%s]',getConfig('main','project_name'))
     log.debug(':Main:: Config.log_file [%s]',getConfig('main','log_file'))
     log.debug(':Main:: Config.runas [%s]',getConfig('main','runas'))
   except KeyboardInterrupt,SystemExit:
