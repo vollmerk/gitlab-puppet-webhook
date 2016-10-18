@@ -272,7 +272,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
           """ If checkout fails, clone """
           self.run_cmd('git clone -b production %s .' % (getConfig('legacy','gitpath')))
         pullCmd = 'git pull'
-        output = self.run-cmd(pullCmd)
+        output = self.run_cmd(pullCmd)
       else:
         """ If it doesn't exist, ch to base and git clone it! """
         os.chdir(os.path.join(getConfig('main','puppet_env_dir'),environment))
