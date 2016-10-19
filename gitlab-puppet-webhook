@@ -136,7 +136,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
         log.debug('Invalid reference, unable to split and determine repoBase %s' % (data['ref']))
     else:
       log.info('do_POST:: Invalid envrionment_method in config file, doing nothing')
-    return False
+      return False
 
     log.debug('do_POST:: Branch [%s] being cloned into %s' % (repoBranch,repoBase))
 
