@@ -227,7 +227,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
   """
   def footprintsEmail(self,sender,ticketnumber,commit):
     log.debug('footprintsEmail:: starting proccessing')
-    commands = None
+    commands = ''
     try:
       time = re.compile('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',re.IGNORECASE)
     except:
