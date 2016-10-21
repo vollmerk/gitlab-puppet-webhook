@@ -228,8 +228,16 @@ class puppetwebhook(BaseHTTPRequestHandler):
   def footprintsEmail(self,sender,ticketnumber,commit):
     log.debug('footprintsEmail:: starting proccessing')
     commands = None
-    time = re.compile('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',re.IGNORECASE)
-    REfixed = re.compile('.*fix[ed]?\s*#' + ticketnumber,re.MULTILINE|re.IGNORECASE)
+    try:
+      time = re.compile('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',re.IGNORECASE)
+    except:
+      log.debug('footprintsEmail:: Unable to compile time regexp')
+      return False
+    try:
+      REfixed = re.compile('.*fix[ed]?\s*#' + ticketnumber,re.MULTILINE|re.IGNORECASE)
+    except:
+      log.debug('footprintsEmail:: Unable to compile REfixed regexp')
+      return False
     """ Check for FIX right before #"""
     if REfixed.search(commit['message']):
       log.debug('footprintsEmail:: found FIX #\d+ in commit triggering close')
