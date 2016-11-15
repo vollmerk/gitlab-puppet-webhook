@@ -59,7 +59,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
     os.environ['HOME'] = os.path.expanduser('~' + getConfig('main','runas'))
     log.debug('run_cmd:: %s' % cmd)
     """ Run the command, and then wait for it to finish """
-    os.umask(0027)
+    os.umask(0022)
     proc = subprocess.Popen(cmd.split(),stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     proc.wait()
     """ Check for non zero return code, and log error """
