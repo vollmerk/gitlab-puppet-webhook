@@ -27,6 +27,7 @@ import json
 import daemon,daemon.pidfile
 import ssl
 import smtplib
+import slackweb
 from email import message
 from pwd import getpwnam
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
@@ -48,6 +49,22 @@ class puppetwebhook(BaseHTTPRequestHandler):
       log.info('sendEmail:: Send E-mail to %s from %s Body:\n%s' % (receivers,sender,message))
     except SMTPException:
       log.critical('sendEmail:: Failed to send e-mail via %s to %s from %s' % (getConfig('main','smtpserver'),receivers,sender))
+      return False
+    return True
+
+  def sendSlack(self,message,channel=configGet('slack','channel'),username=configGet('slack','botname'),icon_emoji=configGet('slack','boticon')):
+    # Attempt to connect to the slack server
+    try:
+      slack = slackweb.Slack(url=getConfig('slack','url'))
+    except:
+      log.critical('sendSlack:: Unable to connect to slack with provided webhook URL, please verify custom webhook path')
+      return False
+
+    # Attempt to send our message out to the masses
+    try:
+      slack.notify(text=message,channel=channel,username=username,icon_emoji=icon_emoji)
+    except:
+      log.critical('sendSlack:: Unable to send notify to channel')
       return False
     return True
 
