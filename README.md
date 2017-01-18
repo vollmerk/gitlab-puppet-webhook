@@ -90,12 +90,17 @@ This method uses R10K to deploy and maintain the code bases, R10K will be trigge
 
 #### Installing on Centos6
 
-  yum -y install python-pip
-  pip install --upgrade python-daemon
+  `yum -y install python-pip`
 
-#### Using Puppet Installer **CURRENTLY BROKEN**
+  `pip install --upgrade python-daemon`
 
-  Look at /installer/README.md for instructions on using the provided puppet installer
+#### Installing with Puppet
+
+  Use the Puppetforge Module vollmerk/gitlabr10khook https://forge.puppet.com/vollmerk/gitlabr10khook/readme
+
+  `mod 'vollmerk-gitlabr10khook'`
+
+  In your Puppetfile
 
 #### Startup Scripts
   Currently only SysVinitD scripts are included, you will need to modify the path to your script

@@ -76,7 +76,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
     os.environ['HOME'] = os.path.expanduser('~' + getConfig('main','runas'))
     log.debug('run_cmd:: %s' % cmd)
     """ Run the command, and then wait for it to finish """
-    os.umask(0027)
+    os.umask(0022)
     proc = subprocess.Popen(cmd.split(),stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     proc.wait()
     """ Check for non zero return code, and log error """
@@ -153,7 +153,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
         log.debug('Invalid reference, unable to split and determine repoBase %s' % (data['ref']))
     else:
       log.info('do_POST:: Invalid envrionment_method in config file, doing nothing')
-    return False
+      return False
 
     log.debug('do_POST:: Branch [%s] being cloned into %s' % (repoBranch,repoBase))
 
@@ -244,9 +244,17 @@ class puppetwebhook(BaseHTTPRequestHandler):
   """
   def footprintsEmail(self,sender,ticketnumber,commit):
     log.debug('footprintsEmail:: starting proccessing')
-    commands = None
-    time = re.compile('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',re.IGNORECASE)
-    REfixed = re.compile('.*fix[ed]?\s*#' + ticketnumber,re.MULTILINE|re.IGNORECASE)
+    commands = ''
+    try:
+      time = re.compile('.*(Time=\d+[mh]{1}(\s{1}\d+[m]{1})?).*',re.IGNORECASE)
+    except:
+      log.debug('footprintsEmail:: Unable to compile time regexp')
+      return False
+    try:
+      REfixed = re.compile('.*fix[ed]?\s*#' + ticketnumber,re.MULTILINE|re.IGNORECASE)
+    except:
+      log.debug('footprintsEmail:: Unable to compile REfixed regexp')
+      return False
     """ Check for FIX right before #"""
     if REfixed.search(commit['message']):
       log.debug('footprintsEmail:: found FIX #\d+ in commit triggering close')
@@ -289,7 +297,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
           """ If checkout fails, clone """
           self.run_cmd('git clone -b production %s .' % (getConfig('legacy','gitpath')))
         pullCmd = 'git pull'
-        output = self.run-cmd(pullCmd)
+        output = self.run_cmd(pullCmd)
       else:
         """ If it doesn't exist, ch to base and git clone it! """
         os.chdir(os.path.join(getConfig('main','puppet_env_dir'),environment))
