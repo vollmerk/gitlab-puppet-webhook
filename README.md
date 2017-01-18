@@ -26,7 +26,7 @@ as a 'deploy' key on all of the repos that it will need to clone, and must have
 SSL certificates. 
 
 ---
-#### REPO mode
+#### REPO mode **NOT COMPATIBLE WITH R10K**
 In `REPO` mode the expectation is you have a production repo (group owned repo) and
 the developers have forked the repo into their own namespace (username)/(repo). When
 a git PUSH happens the webhook will check for a directory within your puppet environment
@@ -46,7 +46,7 @@ else
 ```
 
 ---
-#### Branch mode **INCOMPATIBLE WITH R10K**
+#### Branch mode 
 In `BRANCH` mode the expectation is there is a single repo (group owned) and
 the developers do all of their work in branches. When a git PUSH happens the webhook
 will check for a directory within your puppet environment path that matches the
@@ -55,15 +55,7 @@ a `production` environment.
 
 EXAMPLE - Repo: sysadmin/puppet Branch: Incident4231
 
-The script will do the following
-
-```
-if /etc/puppet/environments/Incident4231 exists then
-  git checkout Incident4231
-  git pull
-else
-  git clone -b Incident4231 [SSH] /etc/puppet/environments/Incident4231
-```
+This method uses R10K to deploy and maintain the code bases, R10K will be triggered via the R10K command as configured
 
 ---
 #### E-mail to Ticket system support
@@ -93,6 +85,7 @@ else
   may need to be installed
 
  * python-daemon
+ * slackweb
 
 
 #### Installing on Centos6
