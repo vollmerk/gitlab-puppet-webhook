@@ -142,7 +142,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
         log.info('do_POST:: Hook is not of the expected object kind, expected %s but %s seen' % (getConfig('main','gitlab_action'),data['object_kind']))
         return False
 
-    try: 
+    try:
       repoBranch = data['ref'].split('/')[2]
     except:
       log.info('do_POST:: Unable to determine branch aborting post')
