@@ -52,7 +52,16 @@ class puppetwebhook(BaseHTTPRequestHandler):
       return False
     return True
 
-  def sendSlack(self,message,channel=configGet('slack','channel'),username=configGet('slack','botname'),icon_emoji=configGet('slack','boticon')):
+  def sendSlack(self,message,channel='',username='',icon_emoji=''):
+
+    if len(channel) == 0:
+      channel = getConfig('slack','channel')
+    if len(username) == 0:
+      username = getConfig('slack','botname')
+    if len(icon_emoji) == 0:
+      icon_emoji = getConfig('slack','boticon')
+
+
     # Attempt to connect to the slack server
     try:
       slack = slackweb.Slack(url=getConfig('slack','url'))

@@ -60,6 +60,26 @@ daemonize=true
 ; Path to your r10k yaml file
 config=/etc/r10k/r10k.yaml
 
+[multimaster]
+; Multi-master attempts to SSH to the specified servers using the
+; provided private key, which must be readable by the user this webhook runs as
+
+; enabled
+; Do you have multiple Puppet Server instances
+; true/false
+enabled=false
+
+; ssh private key
+; Path to the private key that should be used to trigger an
+; R10k run on the remote servers, this must be readable by the user webhook runs as
+; and should not have a password. It's highly recommended that you restrict the ssh key
+; to only being able to execute the exact R10k command
+ssh_private_key=/path/to/private.key
+
+; servers
+; Comma seperated list of servers that it should attempt to ssh to, this can be
+; ip addresses or hostnames, the application will do an ssh [____] r10k deploy environment --puppetfile -c [r10k.config]
+
 [legacy]
 
 ; enabled
