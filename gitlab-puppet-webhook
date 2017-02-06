@@ -138,11 +138,11 @@ class puppetwebhook(BaseHTTPRequestHandler):
 
     """ First we need to see if the post type is one that we should be proccessing """
     try:
-      if data['object_kind'] != getConfig('main','gitlab_action'):
-        log.info('do_POST:: Hook is not of the expected object kind, expected %s but %s seen' % (getConfig('main','gitlab_action'),data['object_kind']))
-        return False
+      if data['object_kind'] == getConfig('main','gitlab_action'):
+        log.info('do_POST:: Allowed Hook type, continuing')
     except:
-      log.info('do_POST:: Allowed Hook type, continuing')
+      log.info('do_POST:: Hook is not of the expected object kind, expected %s but %s seen' % (getConfig('main','gitlab_action'),data['object_kind']))
+      return False
 
     try:
       repoBranch = data['ref'].split('/')[2]
