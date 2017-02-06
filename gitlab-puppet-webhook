@@ -135,6 +135,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
 
     """ Look for our defined puppet project in the json """
     log.info('do_POST:: Incoming Hook detected in JSON starting processing')
+    log.info('do_POST:: %s -- %s' % (data['object_kind'],getConfig('main','gitlab_action')))
 
     """ First we need to see if the post type is one that we should be proccessing """
     try:
