@@ -67,6 +67,11 @@ daemonize=true
 ; Path to your r10k yaml file
 config=/etc/r10k/r10k.yaml
 
+; binary
+; Full path to the r10k binary, incase it's not in your path
+; uses Puppet 4.x default
+binary=/opt/puppetlabs/puppet/bin/r10k
+
 [multimaster]
 ; Multi-master attempts to SSH to the specified servers using the
 ; provided private key, which must be readable by the user this webhook runs as

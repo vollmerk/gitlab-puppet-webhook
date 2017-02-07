@@ -294,7 +294,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
   def environmentSync(self,environment,git_ssh_url,gitBranch):
 
     """ Run R10K to re-sync the environments and modules """
-    r10kcmd = 'r10k deploy environment --puppetfile -c %s' % (getConfig('r10k','config'))
+    r10kcmd = '%s deploy environment --puppetfile -c %s' % (getConfig('r10k','binary'),getConfig('r10k','config'))
     try:
       os.chdir(getConfig('main','puppet_env_dir'))
       self.run_cmd(r10kcmd)
