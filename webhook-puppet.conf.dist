@@ -22,7 +22,8 @@ environment_method=branch
 ; gitlab_action
 ; Define which action (singular for now!) that the webhook should key off of
 ; If the object_kind does not match the specified type it won't try to proccess the hook
-; Valid options: push, build
+; This is in here for future feature capability
+; Valid options: push
 gitlab_action=push
 
 ; production_environment
