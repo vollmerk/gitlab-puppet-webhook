@@ -301,6 +301,10 @@ class puppetwebhook(BaseHTTPRequestHandler):
     except:
       log.info('Unable to run r10k deploy, environments not updated')
 
+    """ Check and see if we're in a multimaster setup and trigger ssh r10k runs if so """
+    if getConfig('multimaster','enabled') == 'true':
+      log.debug('environment_sync::multimaster Enabled, parsing server list')
+
     """ Check and see if legacy is enabled """
     if getConfig('legacy','enabled') == 'true':
       log.debug('environment_sync:: Legacy Enabled, checking monolithic modules out to %s' % (getConfig('legacy','path')))

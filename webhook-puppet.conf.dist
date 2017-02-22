@@ -91,6 +91,7 @@ ssh_private_key=/path/to/private.key
 ; servers
 ; Comma seperated list of servers that it should attempt to ssh to, this can be
 ; ip addresses or hostnames, the application will do an ssh [____] r10k deploy environment --puppetfile -c [r10k.config]
+;servers=127.0.0.1,10.0.0.2,10.0.0.3,localhost
 
 [legacy]
 
