@@ -305,10 +305,10 @@ class puppetwebhook(BaseHTTPRequestHandler):
     if getConfig('multimaster','enabled') == 'true':
       log.debug('environment_sync::multimaster Enabled, parsing server list')
       """ Read in the servers, and split them up """
-      servers = getConfig('multimaster','servers').split(',')
-      for server in servers:
+      for server in getConfig('multimaster','servers').split(','):
         """ Attempt to SSH to the server and trigger the same r10k command """
         sshr10kcmd = 'ssh %s@%s %s' % (getconfig('main','runas'),server,r10kcmd)
+        log.debug('environment_sync::shr10kcmd %s' % (sshr10kcmd))
         try:
           self.run_cmd(sshr10kcmd)
         except:
