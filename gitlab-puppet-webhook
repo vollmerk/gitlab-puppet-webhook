@@ -303,16 +303,19 @@ class puppetwebhook(BaseHTTPRequestHandler):
 
     """ Check and see if we're in a multimaster setup and trigger ssh r10k runs if so """
     if getConfig('multimaster','enabled') == 'true':
-      log.debug('environment_sync::multimaster Enabled, parsing server list')
+      log.debug('environmentSync::multimaster Enabled, parsing server list')
       """ Read in the servers, and split them up """
-      for server in getConfig('multimaster','servers').split(','):
-        """ Attempt to SSH to the server and trigger the same r10k command """
-        sshr10kcmd = 'ssh %s@%s %s' % (getconfig('main','runas'),server,r10kcmd)
-        log.debug('environment_sync::shr10kcmd %s' % (sshr10kcmd))
-        try:
-          self.run_cmd(sshr10kcmd)
-        except:
-          log.info('environmentSync:: Error SSHing to %s for R10k sync' % server)
+      try:
+        for server in getConfig('multimaster','servers').split(','):
+          """ Attempt to SSH to the server and trigger the same r10k command """
+          sshr10kcmd = 'ssh %s@%s %s' % (getConfig('main','runas'),server,r10kcmd)
+          log.debug('environmentSync::sshr10kcmd %s' % (sshr10kcmd))
+          try:
+            self.run_cmd(sshr10kcmd)
+          except:
+            log.info('environmentSync:: Error SSHing to %s for R10k sync' % server)
+      except:
+        log.debug('environmentSync:: Unable to read server list, skipping')
 
     """ Check and see if legacy is enabled """
     if getConfig('legacy','enabled') == 'true':
