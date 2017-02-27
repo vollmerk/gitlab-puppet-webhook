@@ -307,9 +307,9 @@ class puppetwebhook(BaseHTTPRequestHandler):
       """ Read in the servers, and split them up """
       try:
         for server in getConfig('multimaster','servers').split(','):
+          log.info('environmentSync:: Syncing puppet manifests on %s' % (server))
           """ Attempt to SSH to the server and trigger the same r10k command """
           sshr10kcmd = 'ssh %s@%s %s' % (getConfig('main','runas'),server,r10kcmd)
-          log.debug('environmentSync::sshr10kcmd %s' % (sshr10kcmd))
           try:
             self.run_cmd(sshr10kcmd)
           except:
