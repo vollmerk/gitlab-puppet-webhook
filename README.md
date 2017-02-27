@@ -25,6 +25,11 @@ this to work the user that is running the HTTP server must have its SSH Key list
 as a 'deploy' key on all of the repos that it will need to clone, and must have
 SSL certificates. 
 
+If you enable multimaster mode, this python app can attempt to SSH as the user
+its running as to the specified servers, and launch R10k on the remote servers
+this is a poor mans version of the Puppet Enterprise "Compile Master" functionality
+it's not a replacement, but it's good enough for our purposes. 
+
 ---
 #### REPO mode **NOT COMPATIBLE WITH R10K**
 In `REPO` mode the expectation is you have a production repo (group owned repo) and
@@ -56,6 +61,17 @@ a `production` environment.
 EXAMPLE - Repo: sysadmin/puppet Branch: Incident4231
 
 This method uses R10K to deploy and maintain the code bases, R10K will be triggered via the R10K command as configured
+
+---
+#### Multimaster Support
+You can specify a list of comma seperated IP's/DNS names the webhook will attempt to SSH as the user that
+it is running as to each server listed and run the same R10k command that it ran on the local server. The
+assumption is made that R10k and everything is identical on all servers as there is no way to specify
+an alternative command per server. 
+
+This module does not take care of, or account for the requirements of access between the two servers
+though it's expected that you would use a passwordless ssh key restricted to the "MoM" ip address and the
+exact R10k command. 
 
 ---
 #### E-mail to Ticket system support
