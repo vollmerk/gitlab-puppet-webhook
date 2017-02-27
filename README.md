@@ -103,7 +103,6 @@ exact R10k command.
  * python-daemon
  * slackweb
 
-
 #### Installing on Centos6
 
   `yum -y install python-pip`
