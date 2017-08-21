@@ -80,23 +80,26 @@ class puppetwebhook(BaseHTTPRequestHandler):
   """
     run_cmd: Runs a CLI command as a sub-proccess does our GIT commands
   """
-  def run_cmd(self,cmd):
+  def run_cmd(self,cmd,detach=False):
     """ Make sure git looks in the right homedir """
     os.environ['HOME'] = os.path.expanduser('~' + getConfig('main','runas'))
     log.debug('run_cmd:: %s' % cmd)
     """ Run the command, and then wait for it to finish """
     os.umask(0022)
     proc = subprocess.Popen(cmd.split(),stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-    proc.wait()
-    """ Check for non zero return code, and log error """
-    if proc.returncode != 0:
-      log.info('run_cmd:: Non-zero exit code:%s executing: %s' % (proc.returncode,cmd))
-      log.info('run_cmd:: %s',proc.stdout.read())
-      return False
+    if detach == False:
+      proc.wait()
+      """ Check for non zero return code, and log error """
+      if proc.returncode != 0:
+        log.info('run_cmd:: Non-zero exit code:%s executing: %s' % (proc.returncode,cmd))
+        log.info('run_cmd:: %s',proc.stdout.read())
+        return False
+      else:
+        log.info('run_cmd:: %s executed sucessfully',cmd)
+        log.debug('run_cmd:: %s',proc.stdout.read())
+      return proc.stdout
     else:
-      log.info('run_cmd:: %s executed sucessfully',cmd)
-      log.debug('run_cmd:: %s',proc.stdout.read())
-    return proc.stdout
+      return True
 
   """
     do_POST: Handles incoming post from gitlab webhook, decode json and do something about it
@@ -311,7 +314,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
           """ Attempt to SSH to the server and trigger the same r10k command """
           sshr10kcmd = 'ssh %s@%s %s' % (getConfig('main','runas'),server,r10kcmd)
           try:
-            self.run_cmd(sshr10kcmd)
+            self.run_cmd(sshr10kcmd,detach=True)
           except:
             log.info('environmentSync:: Error SSHing to %s for R10k sync' % server)
       except:
