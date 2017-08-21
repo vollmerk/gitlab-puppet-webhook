@@ -300,7 +300,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
     r10kcmd = '%s deploy environment --puppetfile -c %s' % (getConfig('r10k','binary'),getConfig('r10k','config'))
     try:
       os.chdir(getConfig('main','puppet_env_dir'))
-      self.run_cmd(r10kcmd)
+      self.run_cmd(r10kcmd,detach=True)
     except:
       log.info('Unable to run r10k deploy, environments not updated')
 
