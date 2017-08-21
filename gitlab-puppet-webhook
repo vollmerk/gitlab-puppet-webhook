@@ -84,6 +84,17 @@ class puppetwebhook(BaseHTTPRequestHandler):
     """ Make sure git looks in the right homedir """
     os.environ['HOME'] = os.path.expanduser('~' + getConfig('main','runas'))
     log.debug('run_cmd:: %s' % cmd)
+
+    """ If Detach is true, then we need to confirm there are not a bunch of zombies """
+    if detach == True:
+      """ This will only work in linux... I kind of don't care for now """
+      pcount = int(subproccess.check_output('ps -ef | grep %s | wc -l' % (cmd)))
+      """ This is an arbitrary count """
+      if pcount > 5:
+        log.critical('run_cmd:: Unable to run %s more than 5 instances found, exiting' % (cmd))
+        return False
+      elif pcount > 2:
+        log.info('run_cmd:: Warning 2 copies of %s found race condition may exist' % (cmd))
     """ Run the command, and then wait for it to finish """
     os.umask(0022)
     proc = subprocess.Popen(cmd.split(),stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
