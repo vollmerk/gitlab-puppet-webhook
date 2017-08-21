@@ -95,6 +95,9 @@ class puppetwebhook(BaseHTTPRequestHandler):
         return False
       elif pcount > 2:
         log.info('run_cmd:: Warning 2 copies of %s found race condition may exist' % (cmd))
+      
+      else:
+        log.info('run_cmd:: Found %s copies of %s' % (str(pcount),cmd))
     """ Run the command, and then wait for it to finish """
     os.umask(0022)
     proc = subprocess.Popen(cmd.split(),stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
