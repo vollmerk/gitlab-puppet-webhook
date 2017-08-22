@@ -93,8 +93,10 @@ class puppetwebhook(BaseHTTPRequestHandler):
     log.debug('run_cmd:: %s proccesses still running from previous submissions' % (str(len(pidList))))
     for row in range(len(pidList)):
       if psutil.pid_exists(pidList[row]):
+        log.debug('run_cmd:: %s is still running' % (pidList[row]))
         procCount += 1
       else:
+        log.debug('run_cmd:: %s not found, removing from running list' % (pidList[row]))
         pidList.remove(row)
 
     if procCount > 6:
