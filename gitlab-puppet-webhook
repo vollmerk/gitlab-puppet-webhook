@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # vim: set softtabstop=2 ts=2 sw=2 expandtab: 
 #
-# Copyright (c) 2015 Dalhousie University
-# Copyright (c) 2015 Karl Vollmer (karl.vollmer@gmail.com)
+# Copyright (c) 2017 Dalhousie University
+# Copyright (c) 2017 Karl Vollmer (karl.vollmer@gmail.com)
 #
 # This code was based on and Inspired by https://github.com/shawn-sterling/gitlab-webhook-receiver 
 # Copyright (C) 2012 Shawn Sterling <shawn@systemtemplar.org>
@@ -26,6 +26,7 @@ import logging,logging.handlers
 import json
 import daemon,daemon.pidfile
 import ssl
+import psutil
 import smtplib
 import slackweb
 from email import message
@@ -84,23 +85,28 @@ class puppetwebhook(BaseHTTPRequestHandler):
     """ Make sure git looks in the right homedir """
     os.environ['HOME'] = os.path.expanduser('~' + getConfig('main','runas'))
     log.debug('run_cmd:: %s' % cmd)
+    procCount = 0
 
-    """ If Detach is true, then we need to confirm there are not a bunch of zombies """
-    if detach == True:
-      """ This will only work in linux... I kind of don't care for now """
-      pcount = int(subproccess.check_output('ps -ef | grep %s | wc -l' % (cmd)))
-      """ This is an arbitrary count """
-      if pcount > 5:
-        log.critical('run_cmd:: Unable to run %s more than 5 instances found, exiting' % (cmd))
-        return False
-      elif pcount > 2:
-        log.info('run_cmd:: Warning 2 copies of %s found race condition may exist' % (cmd))
-      
+    """ Get the PID of the proccess, store it in an array, if this has spawned more than 6 pids, 
+        at any one time then it throws a warning, at 15 it refuses to spawn additional work
+    """
+    for row in range(len(pidList)):
+      if psutil.pid_exists(pidList[row]):
+        procCount += 1
       else:
-        log.info('run_cmd:: Found %s copies of %s' % (str(pcount),cmd))
-    """ Run the command, and then wait for it to finish """
+        pidList.remove(row)
+
+    if procCount > 6:
+      log.info('run_cmd:: Warning Runner has spawned 6 proccesses that are still running')
+    if procCount > 10:
+      log.critical('run_cmd:: ERROR - More than 10 proccesses spawned by runner still exist, refusing to make it worse')
+      return False
+        
+    """ Run the command, and store the pid - or wait"""
     os.umask(0022)
     proc = subprocess.Popen(cmd.split(),stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    
+    """ If we aren't detaching, then wait and respond - use this for important/fast commands """
     if detach == False:
       proc.wait()
       """ Check for non zero return code, and log error """
@@ -113,6 +119,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
         log.debug('run_cmd:: %s',proc.stdout.read())
       return proc.stdout
     else:
+      pidList.append(proc.pid) 
       return True
 
   """
@@ -431,11 +438,17 @@ def getConfig(section,name):
   return Config.get(section,name)
 
  
+"""
+ Launching the system, this loads the default configuration, then the localized one
+ next attempt to fork off and daemonize if configured as such
+"""
 if __name__ == '__main__':
   global Config,distConfig
+  global pidList
   """ Load the Config file ./webhook-puppet.conf """
   distConfig = ConfigParser.ConfigParser()
   Config = ConfigParser.ConfigParser()
+  pidList = []
   try:
     distConfig.read(os.path.dirname(os.path.abspath(__file__)) + '/webhook-puppet.conf.dist')
   except IOError:
@@ -461,8 +474,6 @@ if __name__ == '__main__':
   if daemongid == 0 or daemonuid == 0:
     print 'Aborting:: service cannot run as ROOT'
     sys.exit(1)
-
-
 
   """ python-daemon doesn't gracefully handle the pid lock file not being writeable so check manually """
   dirStat = os.stat(os.path.dirname(os.path.abspath(__file__)))

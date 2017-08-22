@@ -102,6 +102,7 @@ exact R10k command.
 
  * python-daemon
  * slackweb
+ * psutil
 
 #### Installing on Centos6
 
