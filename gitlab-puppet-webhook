@@ -84,7 +84,6 @@ class puppetwebhook(BaseHTTPRequestHandler):
   def run_cmd(self,cmd,detach=False):
     """ Make sure git looks in the right homedir """
     os.environ['HOME'] = os.path.expanduser('~' + getConfig('main','runas'))
-    log.debug('run_cmd:: %s' % cmd)
     procCount = 0
 
     """ Get the PID of the proccess, store it in an array, if this has spawned more than 6 pids, 
@@ -99,14 +98,15 @@ class puppetwebhook(BaseHTTPRequestHandler):
         log.debug('run_cmd:: %s not found, removing from running list' % (pidList[row]))
         pidList.pop(row)
 
-    if procCount > 6:
+    if procCount > 15:
       log.info('run_cmd:: Warning Runner has spawned 6 proccesses that are still running')
-    if procCount > 10:
+    if procCount > 20:
       log.info('run_cmd:: ERROR - More than 10 proccesses spawned by runner still exist, refusing to make it worse')
       return False
         
     """ Run the command, and store the pid - or wait"""
     os.umask(0022)
+    log.debug('run_cmd:: %s' % cmd)
     proc = subprocess.Popen(cmd.split(),stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     
     """ If we aren't detaching, then wait and respond - use this for important/fast commands """
