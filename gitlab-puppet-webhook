@@ -90,6 +90,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
     """ Get the PID of the proccess, store it in an array, if this has spawned more than 6 pids, 
         at any one time then it throws a warning, at 15 it refuses to spawn additional work
     """
+    log.debug('run_cmd:: %s proccesses still running from previous submissions' % (str(len(pidList))))
     for row in range(len(pidList)):
       if psutil.pid_exists(pidList[row]):
         procCount += 1
@@ -120,6 +121,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
       return proc.stdout
     else:
       pidList.append(proc.pid) 
+      log.debug('run_cmd:: %s launched with pid %s, not waiting' % (cmd,str(proc.pid)))
       return True
 
   """
