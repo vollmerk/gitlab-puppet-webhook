@@ -97,12 +97,12 @@ class puppetwebhook(BaseHTTPRequestHandler):
         procCount += 1
       else:
         log.debug('run_cmd:: %s not found, removing from running list' % (pidList[row]))
-        pidList.remove(row)
+        pidList.pop(row)
 
     if procCount > 6:
       log.info('run_cmd:: Warning Runner has spawned 6 proccesses that are still running')
     if procCount > 10:
-      log.critical('run_cmd:: ERROR - More than 10 proccesses spawned by runner still exist, refusing to make it worse')
+      log.info('run_cmd:: ERROR - More than 10 proccesses spawned by runner still exist, refusing to make it worse')
       return False
         
     """ Run the command, and store the pid - or wait"""
