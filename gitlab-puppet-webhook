@@ -406,10 +406,12 @@ def runLaunch():
   except KeyboardInterrupt,SystemExit:
     log.info(':Main:: Ctrl-C Detected, shutting down')
     server.socket.close()
+    logging.shutdown()
     sys.exit(1)
   except:
     log.info(':Main:: HTTP servers shutting down')
     server.socket.close()
+    logging.shutdown()
     sys.exit(0)
 
 """
