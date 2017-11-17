@@ -13,12 +13,6 @@ protected_environments=outage
 ; out this setting
 ;secret_token=token
 
-; environment_method
-; Method used to determine environment name, possible values are repo and branch. 
-; repo - Environment is defined by the root name of the repo, users are expected to fork from parent repo
-; branch - Environment is defined by the branch name of the master repo
-environment_method=branch
-
 ; gitlab_action
 ; Define which action (singular for now!) that the webhook should key off of
 ; If the object_kind does not match the specified type it won't try to proccess the hook
@@ -93,25 +87,24 @@ ssh_private_key=/path/to/private.key
 ; ip addresses or hostnames, the application will do an ssh [____] r10k deploy environment --puppetfile -c [r10k.config]
 ;servers=127.0.0.1,10.0.0.2,10.0.0.3,localhost
 
-[legacy]
+[slack]
+;; Send some messages to the specified slack url/channel
 
-; enabled
-; Do we have a legacy monolithic pile of modules?
-; true/false
-enabled=false
+; Channel
+; The channel you would like the message posted in
+;channel=false
 
-; path
-; An assumption is made that the branch / fork matches the environment name in R10K, this
-; option defines what the legacy module path is below the branch/fork name, and will check
-; out the pushed repo into a sub directory of the environment as defined below
-; this is done after the r10k run, make sure your environment.conf lists this directory
-; The production branch will always be checked out, you shouldn't be developing against this
-; anymore, so... yup :)
-path=legacy-modules
+; Botname
+; The name the bot should post as
+botname=Gitlab-Webhook
 
-; gitpath
-; The path to the repo to clone into this legacy path
-gitpath=git@git.fo.com:cheese/bread.git
+; Boticon
+; Icon for the bot's posts
+;boticon=awesome
+
+; Slack External webhook URL
+; this is the external hook URL which includes the key for submitting. 
+;slack_url=
 
 [email]
 

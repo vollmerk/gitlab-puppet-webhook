@@ -12,14 +12,6 @@ as well as looking for commit messages which may relate to [Footprints](http://w
 system or the [OTRS](https://www.otrs.com/) ticketing system and attempting to update
 the tickets based on the commit message. 
 
-This application also helps you transition from a monolithic repo to the R10K 
-module profile/role methodology by supporting a 'legacy' repo that is checked out
-into a defined directory within the environment when it's update. So that you can
-smoothly transition from one to the other. 
-
-Environments are based on branch name, however in legacy mode the 'production' branch
-of the legacy environment is always pulled regardless of committed branch. 
-
 Operations are all logged to /var/log/webhook-puppet.log by default. In order for
 this to work the user that is running the HTTP server must have its SSH Key listed
 as a 'deploy' key on all of the repos that it will need to clone, and must have
@@ -29,38 +21,6 @@ If you enable multimaster mode, this python app can attempt to SSH as the user
 its running as to the specified servers, and launch R10k on the remote servers
 this is a poor mans version of the Puppet Enterprise "Compile Master" functionality
 it's not a replacement, but it's good enough for our purposes. 
-
----
-#### REPO mode **NOT COMPATIBLE WITH R10K**
-In `REPO` mode the expectation is you have a production repo (group owned repo) and
-the developers have forked the repo into their own namespace (username)/(repo). When
-a git PUSH happens the webhook will check for a directory within your puppet environment
-path that matches the namespace of the repo (username). If the namespace matches the 
-configured production env it will look for a `production` environment. 
-
-EXAMPLE - Repo: vollmerk/puppet Branch: Incident-4231
-
-The script will do the following
-
-```
-if /etc/puppet/environments/vollmerk exists then
-  git checkout Incident-4231`
-  git pull
-else
-  git clone -b Incident-4231 [SSH] /etc/puppet/environments/vollmerk
-```
-
----
-#### Branch mode 
-In `BRANCH` mode the expectation is there is a single repo (group owned) and
-the developers do all of their work in branches. When a git PUSH happens the webhook
-will check for a directory within your puppet environment path that matches the
-name of the branch. If the branch name matches the configured production env it will look for 
-a `production` environment. 
-
-EXAMPLE - Repo: sysadmin/puppet Branch: Incident4231
-
-This method uses R10K to deploy and maintain the code bases, R10K will be triggered via the R10K command as configured
 
 ---
 #### Multimaster Support

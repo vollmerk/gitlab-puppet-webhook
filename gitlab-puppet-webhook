@@ -173,7 +173,11 @@ class puppetwebhook(BaseHTTPRequestHandler):
     log.debug('do_POST:: HTTP 200 sent to gitlab, connection should be closed')
 
     """ Parse received json """
-    data = json.loads(json_string)
+    rawdata = json.loads(json_string)
+
+    """ Just to make code cleaner, move things around so that the information we want is always
+        where we expect it, and give it default values if it's not available """
+    data = self.normalizeData(rawdata)
 
     """ Look for our defined puppet project in the json """
     log.info('do_POST:: Incoming Hook detected in JSON starting processing')
@@ -185,67 +189,23 @@ class puppetwebhook(BaseHTTPRequestHandler):
       log.info('do_POST:: Hook is not of the expected object kind, expected %s but %s seen' % (getConfig('main','gitlab_action'),data['object_kind']))
       return False
 
-    try:
-      repoBranch = data['ref'].split('/')[2]
-    except:
-      log.info('do_POST:: Unable to determine branch aborting post')
-      return False
-
-    """ Check the environment_method config option """
-    try:
-      method = getConfig('main','environment_method')
-    except:
-      log.debug('do_POST:: Invalid Config(main,environment_method) defaulting to repo')
-      method = 'brach'
-
-    if method == 'repo':
-      """ Make sure we're not dealing with a protected/prohibited user/env """
-      try:
-        repoBase = data['repository']['git_ssh_url'].split(':')[1].split('/')[0]
-      except:
-        log.debug('Invalid Git SSH Url in payload unable to determine repoBase %s' % (data['repository']['git_ssh_url']))
-    elif method == 'branch':
-      try:
-        repoBase = data['ref'].split('/')[2]
-      except:
-        log.debug('Invalid reference, unable to split and determine repoBase %s' % (data['ref']))
+    if data['branch'] in getConfig('main','protected_environments'):
+      log.info('do_POST:: %s is a protected environment, halting',data['branch'])
     else:
-      log.info('do_POST:: Invalid envrionment_method in config file, doing nothing')
-      return False
-
-    log.debug('do_POST:: Branch [%s] being cloned into %s' % (repoBranch,repoBase))
-
-    if method == 'branch':
-      """ If we're on the production branch, reset repoBase to production """
-      if repoBranch == getConfig('main','production_environment'):
-        repoBase = 'production'
-      else:
-        repoBase = repoBranch
-    elif method == 'repo':
-      """ Check the repoBase for production_environment matching """
-      if repoBase == getConfig('main','production_environment'):
-        repoBase = 'production'
-    else:
-      log.critical('do_POST:: Invalid environment_method specified doing nothing')
-      return False
-
-    if repoBase in getConfig('main','protected_environments'):
-      log.info('do_POST:: %s is a protected environment, halting',repoBase)
-    else:
-      """ Run the git pull, create dir if needed """
-      log.info('do_POST:: %s is not a protected environment, syncing',repoBase)
-      self.environmentSync(repoBase,data['repository']['git_ssh_url'],repoBranch)
-      self.sendTicketSystem(data,repoBranch,repoBase)
+      """ Trigger R10k and all the other sexyness """
+      log.info('do_POST:: %s is not a protected environment, syncing',data['branch'])
+      self.environmentSync(data)
+      self.sendTicketSystem(data)
 
   """ sendTicketSystem """
   """ Sends e-mail to a ticket system """
-  def sendTicketSystem(self,data,repoBranch,repoBase):
+  def sendTicketSystem(self,data):
     """ Send e-mail based on method, and configured ticket system modules """
-    if getConfig('email','method') == 'production' and repoBase != 'production':
-      log.debug('sendTicketSystem:: repoBase not production not e-mailing to ticket system(s)')
+    if getConfig('email','method') == 'production' and data['branch'] != getConfig('main','production_environment'):
+      log.debug('sendTicketSystem:: Branch not production not e-mailing to ticket system(s)')
       return False
-    elif getConfig('email','method') == 'development' and repoBase == 'production':
-      log.debug('sendTicketSystem:: repoBase is production, method is development not e-mailing')
+    elif getConfig('email','method') == 'development' and data['branch'] == getConfig('main','production_environment'):
+      log.debug('sendTicketSystem:: Branch is production, method is development not e-mailing')
       return False
 
     """ Do reg-exp to try to find the #[foo] in commit message """
@@ -274,6 +234,29 @@ class puppetwebhook(BaseHTTPRequestHandler):
      
     return True
 
+  """
+   normalizedata:: Normalize the incoming json data
+    We need the following
+      branch  :: name of the branch this commit relates to
+      commits :: Data for the commit messages
+  """
+  def normalizeData(self,rawdata):
+    data = {}
+      
+    data['commits'] = rawdata['commits']
+
+    if rawdata['object_kind'] == 'pipeline':
+      data['branch']  = rawdata['project']['default_branch']
+    elif rawdata['object_kind'] == 'push':
+      try:
+        data['branch']  = rawdata['ref'].split('/')[2]
+      except:
+        log.info('normalizeData:: Unable to determine branch, setting it to empty string')
+        data['branch']  = ''
+    else:
+      data['branch']  = ''
+
+    return data
 
   """ 
    otrsEmail:: If otrs is enabled in teh config then attempt to send an 
@@ -333,7 +316,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
     environmentSync:: takes a project base and a SSH repo url, create directory and
      clone git repo if it doesn't exist, if it exists then just do a git pull
   """
-  def environmentSync(self,environment,git_ssh_url,gitBranch):
+  def environmentSync(self,data):
 
     """ Run R10K to re-sync the environments and modules """
     r10kcmd = '%s deploy environment --puppetfile -c %s' % (getConfig('r10k','binary'),getConfig('r10k','config'))
@@ -358,25 +341,6 @@ class puppetwebhook(BaseHTTPRequestHandler):
             log.info('environmentSync:: Error SSHing to %s for R10k sync' % server)
       except:
         log.debug('environmentSync:: Unable to read server list, skipping')
-
-    """ Check and see if legacy is enabled """
-    if getConfig('legacy','enabled') == 'true':
-      log.debug('environment_sync:: Legacy Enabled, checking monolithic modules out to %s' % (getConfig('legacy','path')))
-      if os.path.exists(os.path.join(getConfig('main','puppet_env_dir'),environment,getConfig('legacy','path'))):
-        os.chdir(os.path.join(getConfig('main','puppet_env_dir'),environment,getConfig('legacy','path')))
-        """ Check the repo out into the current directory """
-        checkoutCmd = 'git checkout production .'
-        output = self.run_cmd(checkoutCmd)
-        if output == False:
-          """ If checkout fails, clone """
-          self.run_cmd('git clone -b production %s .' % (getConfig('legacy','gitpath')))
-        pullCmd = 'git pull'
-        output = self.run_cmd(pullCmd)
-      else:
-        """ If it doesn't exist, ch to base and git clone it! """
-        os.chdir(os.path.join(getConfig('main','puppet_env_dir'),environment))
-        log.info('environment_sync:: %s/%s does not exist, cloning into new directory' % (environment,getConfig('legacy','path')))
-        output = self.run_cmd('git clone -b %s %s %s' % (gitBranch,getConfig('legacy','gitpath'),getConfig('legacy','path')))
 
     return True
 
