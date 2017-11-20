@@ -250,6 +250,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
     data['commits'] = rawdata['commits']
 
     if rawdata['object_kind'] == 'pipeline':
+      log.debug('normalizeData:: Pipeline detected')
       data['branch']  = rawdata['project']['default_branch']
       if rawdata['object_attributes']['status'] == 'success':
         data['success'] = True
