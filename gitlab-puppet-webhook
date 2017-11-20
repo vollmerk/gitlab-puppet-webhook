@@ -239,7 +239,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
     return True
 
   """
-   normalizedata:: Normalize the incoming json data
+   normalizeData:: Normalize the incoming json data
     We need the following
       branch  :: name of the branch this commit relates to
       commits :: Data for the commit messages
@@ -251,7 +251,12 @@ class puppetwebhook(BaseHTTPRequestHandler):
 
     if rawdata['object_kind'] == 'pipeline':
       data['branch']  = rawdata['project']['default_branch']
-      data['success'] = True if rawdata['object_attributes']['status'] == 'success' else False
+      if rawdata['object_attributes']['status'] == 'success':
+        data['success'] = True
+        log.debug('normalizeData:: Pipeline Successful, continuing')
+      else:
+        log.debug('normalizeData:: Pipeline Failed, halting')
+        data['success'] = False
     elif rawdata['object_kind'] == 'push':
       try:
         data['branch']  = rawdata['ref'].split('/')[2]
