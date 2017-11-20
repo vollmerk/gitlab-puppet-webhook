@@ -183,10 +183,10 @@ class puppetwebhook(BaseHTTPRequestHandler):
     log.info('do_POST:: Incoming Hook detected in JSON starting processing')
 
     """ First we need to see if the post type is one that we should be proccessing """
-    if data['object_kind'] == getConfig('main','gitlab_action'):
-      log.info('do_POST:: %s Allowed Hook type, continuing' % (data['object_kind']))
+    if rawdata['object_kind'] == getConfig('main','gitlab_action'):
+      log.info('do_POST:: %s Allowed Hook type, continuing' % (rawdata['object_kind']))
     else:
-      log.info('do_POST:: Hook is not of the expected object kind, expected %s but %s seen' % (getConfig('main','gitlab_action'),data['object_kind']))
+      log.info('do_POST:: Hook is not of the expected object kind, expected %s but %s seen' % (getConfig('main','gitlab_action'),rawdata['object_kind']))
       return False
 
     if data['branch'] in getConfig('main','protected_environments'):
