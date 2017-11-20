@@ -173,11 +173,19 @@ class puppetwebhook(BaseHTTPRequestHandler):
     log.debug('do_POST:: HTTP 200 sent to gitlab, connection should be closed')
 
     """ Parse received json """
-    rawdata = json.loads(json_string)
+    try:
+      rawdata = json.loads(json_string)
+    except:
+      log.debug('do_POST:: Invalid JSON doing nothing')
+      return False
 
     """ Just to make code cleaner, move things around so that the information we want is always
         where we expect it, and give it default values if it's not available """
-    data = self.normalizeData(rawdata)
+    try:
+      data = self.normalizeData(rawdata)
+    except:
+      log.debug('do_POST:: Data normalization failed, doing nothing')
+      return False
 
     """ Look for our defined puppet project in the json """
     log.info('do_POST:: Incoming Hook detected in JSON starting processing')
@@ -246,12 +254,12 @@ class puppetwebhook(BaseHTTPRequestHandler):
   """
   def normalizeData(self,rawdata):
     data = {}
-      
-    data['commits'] = rawdata['commits']
+    data['commits'] = []
 
     if rawdata['object_kind'] == 'pipeline':
       log.debug('normalizeData:: Pipeline detected')
       data['branch']  = rawdata['project']['default_branch']
+      data['commits'].append(rawdata['commit'])
       if rawdata['object_attributes']['status'] == 'success':
         data['success'] = True
         log.debug('normalizeData:: Pipeline Successful, continuing')
@@ -261,6 +269,7 @@ class puppetwebhook(BaseHTTPRequestHandler):
     elif rawdata['object_kind'] == 'push':
       try:
         data['branch']  = rawdata['ref'].split('/')[2]
+        data['commits'] = rawdata['commits']
         data['success'] = True
       except:
         log.info('normalizeData:: Unable to determine branch, setting it to empty string')
