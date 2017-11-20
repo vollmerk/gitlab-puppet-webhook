@@ -189,6 +189,10 @@ class puppetwebhook(BaseHTTPRequestHandler):
       log.info('do_POST:: Hook is not of the expected object kind, expected %s but %s seen' % (getConfig('main','gitlab_action'),rawdata['object_kind']))
       return False
 
+    if data['success'] == False:
+      log.info('do_POST:: Gitlab Action not considered successful, doing nothing')
+      return False
+
     if data['branch'] in getConfig('main','protected_environments'):
       log.info('do_POST:: %s is a protected environment, halting',data['branch'])
     else:
@@ -247,14 +251,18 @@ class puppetwebhook(BaseHTTPRequestHandler):
 
     if rawdata['object_kind'] == 'pipeline':
       data['branch']  = rawdata['project']['default_branch']
+      data['success'] = True if rawdata['object_attributes']['status'] == 'success' else False
     elif rawdata['object_kind'] == 'push':
       try:
         data['branch']  = rawdata['ref'].split('/')[2]
+        data['success'] = True
       except:
         log.info('normalizeData:: Unable to determine branch, setting it to empty string')
         data['branch']  = ''
+        data['success'] = False
     else:
       data['branch']  = ''
+      data['success'] = False
 
     return data
 
